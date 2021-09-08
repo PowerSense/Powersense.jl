@@ -1,6 +1,6 @@
-name = "ActiveSetMethods"
+name = "Powersense"
 uuid = "c5022caa-3a13-4c38-8648-ef17c886ed6e"
-authors = ["Kibaek Kim <kimk@anl.gov>"]
+authors = ["Sayed A. Sadat <sadat@powersense.io>"]
 version = "0.1.0"
 
 [deps]

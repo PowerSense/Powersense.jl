@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "/home/projects/projects/nonlinear_optimization/ActiveSetMethodss/src");
-using ActiveSetMethods
+push!(LOAD_PATH, "/home/projects/projects/nonlinear_optimization/Powersense/src");
+using Powersense
 using GLPK
 using Test
 

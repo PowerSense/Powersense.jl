@@ -1195,7 +1195,7 @@ function MOI.get(model::Optimizer, ::MOI.TerminationStatus)
     elseif status == :Insufficient_Memory
         return MOI.MEMORY_LIMIT
     else
-        error("Unrecognized Ipopt status $status")
+        error("Unrecognized Powersense.Optimizer status $status")
     end
 end
 

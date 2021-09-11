@@ -1,7 +1,7 @@
 # Powersense.jl
 
 ![Run tests](https://github.com/PowerSense/Powersense.jl/workflows/Run%20tests/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/PowerSense/Powersense.jl)
+[![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg?token=SUH4VPE41D)](https://codecov.io/gh/PowerSense/Powersense.jl)
 
 This is a Julia package that implements active set methods for continuous nonlinear optimization.
 The package currently implements a sequential linear programming method based on line search.

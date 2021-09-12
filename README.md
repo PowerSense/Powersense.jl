@@ -8,11 +8,14 @@
 
 The NLP solver of this Julia package implements active set methods for continuous nonlinear optimization. The package currently implements a sequential linear programming method based on line search.
 
+
 ## Installation
 
 ```julia
 Pkg.add("Powersense")
 ```
+
+
 
 ## NLP Solver Example
 

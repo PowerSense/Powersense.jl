@@ -10,15 +10,15 @@ ysol = 0.0
 status = nothing
 
 optimizer_solver = try 
-			optimizer_with_attributes(ActiveSetMethods.Optimizer,"external_optimizer"=>optimizer_with_attributes(GLPK.Optimizer,"msg_lev"=>GLPK.MSG_OFF)); 
+			optimizer_with_attributes(Powersense.Optimizer,"external_optimizer"=>optimizer_with_attributes(GLPK.Optimizer,"msg_lev"=>GLPK.MSG_OFF)); 
 		    catch; 
-		    	ActiveSetMethods.Optimizer; 
+		    	Powersense.Optimizer; 
 		    end
 
 model = try 
 	   Model(optimizer_solver); 
 	 catch; 
-	   Model(ActiveSetMethods.Optimizer); 
+	   Model(Powersense.Optimizer); 
 	 end
 
 if typeof(optimizer_solver) == DataType 

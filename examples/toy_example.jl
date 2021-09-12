@@ -1,12 +1,12 @@
-using ActiveSetMethods, GLPK
+using Powersense, GLPK
 using JuMP
 
 """
-The attributes to the ActiveSetMethods and the external solver can be added using the following method with JuMP
+The attributes to the Powersense and the external solver can be added using the following method with JuMP
 """
-#optimizer_with_attributes( ActiveSetMethods.Optimizer, "external_optimizer" => optimizer_with_attributes((GLPK.Optimizer,"msg_lev"=>GLPK.MSG_OFF)))
+#optimizer_with_attributes( Powersense.Optimizer, "external_optimizer" => optimizer_with_attributes((GLPK.Optimizer,"msg_lev"=>GLPK.MSG_OFF)))
 
-model = Model(ActiveSetMethods.Optimizer);
+model = Model(Powersense.Optimizer);
 set_optimizer_attribute(model, "external_optimizer", GLPK.Optimizer)
 
 @variable(model, X);

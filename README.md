@@ -12,6 +12,7 @@ The NLP solver of this Julia package implements active set methods for continuou
 ## Installation
 
 ```julia
+import Pkg
 Pkg.add("Powersense")
 ```
 

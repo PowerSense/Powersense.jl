@@ -1,5 +1,7 @@
 # Powersense.jl
 
+<img src="https://powersense.github.io//assets/Powersense_logo_ready.png" align="left" width="200" alt="PowerSense logo">
+
 ![Run tests](https://github.com/PowerSense/Powersense.jl/workflows/Run%20tests/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg?token=SUH4VPE41D)](https://codecov.io/gh/PowerSense/Powersense.jl)
 [![Documentation](https://github.com/PowerSense/Powersense.jl/workflows/Documentation/badge.svg)](https://www.powersense.io/)

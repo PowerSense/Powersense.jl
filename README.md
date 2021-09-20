@@ -2,8 +2,7 @@
 
 <img src="https://powersense.github.io//assets/Powersense_logo.png" align="left" width="200" alt="PowerSense logo">
 
-https://img.shields.io/endpoint?color=orange&label=powered%20by&logo=PowerSENSE&logoColor=green&style=plastic&url=https%3A%2F%2Fwww.powersense.io%2F
-
+[![codecov](https://img.shields.io/badge/powered%20by-PowerSENSE-blue)](https://www.powersense.io/)
 ![Run tests](https://github.com/PowerSense/Powersense.jl/workflows/Run%20tests/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg?token=SUH4VPE41D)](https://codecov.io/gh/PowerSense/Powersense.jl)
 [![Documentation](https://github.com/PowerSense/Powersense.jl/workflows/Documentation/badge.svg)](https://www.powersense.io/)

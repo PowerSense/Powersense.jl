@@ -2,10 +2,10 @@
 
 <img src="https://powersense.github.io//assets/Powersense_logo.png" align="left" width="200" alt="PowerSense logo">
 
-[![codecov](https://img.shields.io/badge/powered%20by-PowerSENSE-blue)](https://www.powersense.io/)
+<a href="https://www.powersense.io/)"><img src="https://img.shields.io/badge/powered%20by-PowerSENSE-blue"/></a>
 ![Run tests](https://github.com/PowerSense/Powersense.jl/workflows/Run%20tests/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg?token=SUH4VPE41D)](https://codecov.io/gh/PowerSense/Powersense.jl)
-[![Documentation](https://github.com/PowerSense/Powersense.jl/workflows/Documentation/badge.svg)](https://www.powersense.io/)
+<!-- [![Documentation](https://github.com/PowerSense/Powersense.jl/workflows/Documentation/badge.svg)](https://www.powersense.io/) -->
 
 The NLP solver of this Julia package implements active set methods for continuous nonlinear optimization. The package currently implements a sequential linear programming method based on line search.
 

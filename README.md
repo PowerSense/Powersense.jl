@@ -7,7 +7,10 @@
 [![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg?token=SUH4VPE41D)](https://codecov.io/gh/PowerSense/Powersense.jl)
 <!-- [![Documentation](https://github.com/PowerSense/Powersense.jl/workflows/Documentation/badge.svg)](https://www.powersense.io/) -->
 
-The NLP solver of this Julia package implements active set methods for continuous nonlinear optimization. The package currently implements a sequential linear programming method based on line search.
+The package has the following features implemented in it.
+
+- NLP solver: This component implements active set methods for continuous nonlinear optimization. The package currently implements a sequential linear programming method based on line search.
+- ACOPF Formulations: This component implements 7 different ACOPF formulations with different sparsities. The formulations can be solved using `Powersense.jl`'s NLP solver or external solver.
 
 
 ## Installation

@@ -1,7 +1,7 @@
 name = "Powersense"
 uuid = "c5022caa-3a13-4c38-8648-ef17c886ed6e"
 authors = ["Sayed A. Sadat <sadat@powersense.io>"]
-version = "0.0.2"
+version = "0.0.3"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

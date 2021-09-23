@@ -298,7 +298,7 @@ function run_OPF(data::PowersenseData;
     
     if solve
     	JuMP.optimize!(model);
-    	if has_values(model)
+    	if JuMP.has_values(model)
     		data.cost = JuMP.objective_value(model)
     	end
     end

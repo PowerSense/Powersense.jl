@@ -20,7 +20,7 @@ end
     @test isapprox(xsol, -1.0, rtol=1e-4)
     @test isapprox(ysol, -1.0, rtol=1e-4)
     @test status == MOI.LOCALLY_SOLVED
-    include("../examples/opt_example.jl")
+    include("../examples/opt/opt_example.jl")
     @test isapprox(xsol, -1.0, rtol=1e-4)
     @test isapprox(ysol, -1.0, rtol=1e-4)
 end

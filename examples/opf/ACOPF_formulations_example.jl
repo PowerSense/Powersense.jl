@@ -1,6 +1,6 @@
 model = Model(Ipopt.Optimizer); 
 
-path = ["../examples/14bus/case.raw"; "../examples/14bus/case.rop"]
+path = ["../examples/opf/14bus/case.raw"; "../examples/opf/14bus/case.rop"]
 
 start_time = time();
 

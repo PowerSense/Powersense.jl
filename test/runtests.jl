@@ -1,5 +1,6 @@
 using Powersense
 using GLPK
+using Ipopt
 using Test
 
 
@@ -10,24 +11,22 @@ using Test
 
 
 @testset "MathOptInterface" begin
-    include("MOI_wrapper.jl")
+    include("OPT/MOI_wrapper.jl")
 end
 
 @testset "External Solver Attributes Implementation with Toy Example" begin
-    include("ext_solver.jl")
+    include("OPT/ext_solver.jl")
     @test typeof(optimizer_solver) == MOI.OptimizerWithAttributes
     @test isapprox(xsol, -1.0, rtol=1e-4)
     @test isapprox(ysol, -1.0, rtol=1e-4)
     @test status == MOI.LOCALLY_SOLVED
-end
-
-@testset "toy_example.jl" begin
-    include("../examples/toy_example.jl")
+    include("../examples/opt_example.jl")
     @test isapprox(xsol, -1.0, rtol=1e-4)
     @test isapprox(ysol, -1.0, rtol=1e-4)
 end
 
-@testset "opf.jl" begin
-    include("../examples/acopf/opf.jl")
-    run_opf("../examples/acopf/case3.m")
-end 
+@testset "ACOPF Formulations with IPOPT" begin
+    include("../examples/ACOPF_formulations_example.jl")
+    include("OPF/ACOPF_formulations.jl")
+end
+

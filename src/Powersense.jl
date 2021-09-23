@@ -2,18 +2,19 @@ module Powersense
 
 using LinearAlgebra
 using SparseArrays
-import MathOptInterface
+import MathOptInterface, JuMP
 
 const MOI = MathOptInterface
 const MOIU = MathOptInterface.Utilities
 
-include("status.jl")
-include("parameters.jl")
-include("model.jl")
+export process_data, create_PowersenseData, display_preprocess_info, run_OPF
 
-include("algorithms.jl")
+include("opt/status.jl")
+include("opt/parameters.jl")
+include("opt/model.jl")
+include("opt/algorithms.jl")
+include("opt/MOI_wrapper.jl")
 
-include("MOI_wrapper.jl")
-
-
+include("formulations/PowersenseData.jl");
+include("formulations/formulations.jl");
 end

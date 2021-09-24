@@ -127,7 +127,6 @@ function create_PowersenseData(network::Dict{String,Any})
         end
         
         push!(m.cgh, Float64[]); push!(m.pgh, Float64[]);
-        push!(m.tgh, Float64[]);
         #@show i
         m.lps[i] = gen["LinPoints"]; 
         genCost = gen["LinCost"];
@@ -150,7 +149,6 @@ function create_PowersenseData(network::Dict{String,Any})
             push!(m.cgh[i],0); 
             push!(m.pgh[i],0);
         end
-        append!(m.tgh[i],zeros(m.lps[i]))
     end
     m.source_type = "arpae"
     "Assigning bus parameters"

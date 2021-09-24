@@ -63,7 +63,6 @@ using Powersense, Ipopt
 # Build Powersense Data model. Path is the address to where PSSE or MATPOWER file types
 Data = create_PowersenseData(path)
 
-
 run_opf!(M, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
 ```
 

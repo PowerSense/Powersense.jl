@@ -66,7 +66,7 @@ mutable struct PowersenseData
     
     model
 
-    PowersenseData(nbus::Int,ngen::Int,nbr::Int,nbss::Int,start_time::Float64) = new(
+    PowersenseData(nbus::Int,ngen::Int,nbr::Int,nbss::Int) = new(
         nbus,ngen,nbr,nbss,zeros(nbus),zeros(nbus),zeros(ngen),zeros(ngen),zeros(ngen),zeros(ngen),zeros(nbss),zeros(nbss),zeros(nbr),
         zeros(ngen),zeros(ngen),zeros(nbss),ones(nbus),zeros(nbus), zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
         ones(nbus),zeros(nbus),Array{Tuple{Int64,Int64},1}(),Dict(),zeros(nbus),zeros(nbus),zeros(nbus),zeros(nbus),        

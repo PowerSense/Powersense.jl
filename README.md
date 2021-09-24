@@ -9,8 +9,8 @@
 
 The package has the following features implemented and ready to use.
 
-- NLP solver: This component implements sequential linear programming method for continuous nonlinear optimization. The package currently implements a line search algorithm.
-- OPF formulations: This component implements 7 different AC optimal power flow (OPF) formulations with different sparsities. The formulations can be solved using `Powersense.jl`'s NLP solver or an external solver.
+- `OPT`: The nonlinear programming optimization component implements sequential linear programming method for continuous nonlinear optimization. The package currently implements a line search algorithm.
+- `OPF`: The AC optimal power flow (AC-OPF) component implements 7 different AC-OPF formulations. These formulations have different sparsities and are a combination of varieties of different approaches of modeling voltages, admittance matrix, and branch flows. The formulations can be solved using the `OPT` feature of the `Powersense.jl` or using an external NLP solver.
 
 
 ## Installation
@@ -63,7 +63,7 @@ using Powersense, Ipopt
 # Build Powersense Data model. Path is the address to where PSSE or MATPOWER file types
 Data = create_PowersenseData(path)
 
-run_opf!(M, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
+run_opf!(Data, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
 ```
 
 # Acknowledgements

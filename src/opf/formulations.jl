@@ -293,13 +293,6 @@ function create_opf_model!(data::PowersenseData;
             JuMP.@NLconstraint(data.model, y¹ * (vr[t]*vr[f]+vi[t]*vi[f]) + y² * (vr[t]*vi[f]-vi[t]*vr[f]) + y * (vr[t]^2+vi[t]^2) + Y * (vr[f]^2+vi[f]^2) <= data.Imax[k]^2);   
         end
     end
-    
-    if solve
-    	JuMP.optimize!(data.model);
-    	if JuMP.has_values(data.model)
-    		data.cost = JuMP.objective_value(data.model)
-    	end
-    end
 end
 
 function run_opf!(data::PowersenseData;

@@ -15,6 +15,6 @@ include("opt/model.jl")
 include("opt/algorithms.jl")
 include("opt/MOI_wrapper.jl")
 
-include("formulations/PowersenseData.jl");
-include("formulations/formulations.jl");
+include("opf/PowersenseData.jl");
+include("opf/formulations.jl");
 end

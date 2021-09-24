@@ -10,7 +10,7 @@ network = process_data(path)
 
 M = create_PowersenseData(network, start_time)
 
-run_OPF(M, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
+run_opf(M, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
 
 @test isapprox(M.cost, 1.467e+02, rtol=1e-1)
 

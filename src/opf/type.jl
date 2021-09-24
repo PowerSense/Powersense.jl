@@ -1,6 +1,6 @@
 mutable struct ACOPF_fromulation ACOPF_fromulation() = new() end
 
-export PNPAPVmodel
+export PBRAPVmodel, PBRARVmodel, CBRARVmodel, CBRAWVmodel, PNPAPVmodel, PNRAPVmodel, PNRARVmodel
 
 PBRAPVmodel =  ACOPF_fromulation();     #Power Branch Flow Rectangular Admittance Polar Voltage
 PBRARVmodel =  ACOPF_fromulation();     #Power Branch Flow Rectangular Admittance Rectangular Voltage

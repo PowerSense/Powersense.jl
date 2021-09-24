@@ -51,9 +51,6 @@ mutable struct PowersenseData
     cgh::Vector{Vector{Float64}}
     
     cost::Float64
-    Wd::Vector{Float64}
-    Wr::Vector{Float64}
-    Wi::Vector{Float64}
     c0::Vector{Float64}
     c1::Vector{Float64}
     c2::Vector{Float64}
@@ -61,37 +58,26 @@ mutable struct PowersenseData
     source_type::String
 
     cg::Vector{Float64}
-    tgh::Vector{Vector{Float64}}
-    start_time::Float64
     slack::Int
     Ag::SparseMatrixCSC{Float64,Int64}
     Abss::SparseMatrixCSC{Float64,Int64}
     Aij::SparseMatrixCSC{Float64,Int64}
     Aji::SparseMatrixCSC{Float64,Int64}
-    vIij_set::Vector{Int}
-    vIji_set::Vector{Int}
-    margin::Float64
     
-    GUROBI_ENV
-    toolIij
-    toolIji
-    toolPij
-    toolQij
-    j_str_Iij
-    j_str_Iji
+    model
 
     PowersenseData(nbus::Int,ngen::Int,nbr::Int,nbss::Int,start_time::Float64) = new(
         nbus,ngen,nbr,nbss,zeros(nbus),zeros(nbus),zeros(ngen),zeros(ngen),zeros(ngen),zeros(ngen),zeros(nbss),zeros(nbss),zeros(nbr),
         zeros(ngen),zeros(ngen),zeros(nbss),ones(nbus),zeros(nbus), zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
         ones(nbus),zeros(nbus),Array{Tuple{Int64,Int64},1}(),Dict(),zeros(nbus),zeros(nbus),zeros(nbus),zeros(nbus),        
         zeros(nbus),zeros(nbus),zeros(nbr),zeros(nbr),zeros(2*nbr),zeros(2*nbr),zeros(ngen),Vector{Vector{Float64}}(),Vector{Vector{Float64}}(),
-        0.0,zeros(nbus),zeros(nbr),zeros(nbr),zeros(ngen),zeros(ngen),zeros(ngen),0, " ",
-        zeros(ngen),Vector{Vector{Float64}}(),start_time,1,spzeros(nbus, ngen),spzeros(nbus, nbss),spzeros(nbus, nbr),spzeros(nbus, nbr),zeros(Int,0),zeros(Int,0),0.0
+        0.0,zeros(ngen),zeros(ngen),zeros(ngen),0, " ",
+        zeros(ngen),1,spzeros(nbus, ngen),spzeros(nbus, nbss),spzeros(nbus, nbr),spzeros(nbus, nbr)
     )
 end
 
-function create_PowersenseData(network::Dict{String,Any}, start_time::Float64)
-    m = PowersenseData(length(network["bus"]),length(network["gen"]),length(network["branch"]),length(network["sshunt"])-1,start_time);
+function create_PowersenseData(network::Dict{String,Any})
+    m = PowersenseData(length(network["bus"]),length(network["gen"]),length(network["branch"]),length(network["sshunt"])-1);
     cost_segments = 30;
     "Assigning bss parameters"
     @simd for i=1:m.nbss sh=network["sshunt"][string(i)]; st=sh["status"]; bus=sh["shunt_bus_index"];
@@ -197,66 +183,10 @@ function create_PowersenseData(network::Dict{String,Any}, start_time::Float64)
         push!(m.br, (f,t));
     end
     m.node = network["nbal"];
-    #add_toolRV(m);
-    #add_toolPV(m);
-    #add_tools_distributed(m)
     return m
 end
 
-#=function add_tools_distributed(m::PowersenseData)  
-     "Optimization tool for Pij"
-    toolP = Model();
-    @variable(toolP, θ[1:m.nbus]);
-    @variable(toolP, V[1:m.nbus]);
-    @objective(toolP, Min, 0.0);
-    for k=1:m.nbr
-        f = m.br[k][1];                 t = m.br[k][2];
-        @NLconstraint(toolP, 0.0 == - m.gf[k] * V[f]^2 - (m.Gf[k] * cos(θ[f] - θ[t]) + m.Bf[k] * sin(θ[f] - θ[t])) * V[f] * V[t]);
-        @NLconstraint(toolP, 0.0 == - m.gt[k] * V[t]^2 - (m.Gt[k] * cos(θ[t] - θ[f]) + m.Bt[k] * sin(θ[t] - θ[f])) * V[f] * V[t]);
-    end
-    m.toolPij = NLPEvaluator(toolP);
-    MOI.initialize(m.toolPij, [:Grad, :Hess]);
 
-    "Optimization tool for Qij"
-    toolQ = Model();
-    @variable(toolQ, θ[1:m.nbus]);
-    @variable(toolQ, V[1:m.nbus]);
-    @objective(toolQ, Min, 0.0);
-    for k=1:m.nbr
-        f = m.br[k][1];                 t = m.br[k][2];
-        @NLconstraint(toolQ, 0.0 ==  m.bf[k] * V[f]^2 + (m.Bf[k] * cos(θ[f] - θ[t]) - m.Gf[k] * sin(θ[f] - θ[t])) * V[f] * V[t]);
-        @NLconstraint(toolQ, 0.0 == m.bt[k] * V[t]^2 + (m.Bt[k] * cos(θ[t] - θ[f]) - m.Gt[k] * sin(θ[t] - θ[f])) * V[f] * V[t]);
-    end
-    m.toolQij = NLPEvaluator(toolQ);
-    MOI.initialize(m.toolQij, [:Grad, :Hess]);
-    
-    "Optimization tool for Iij"
-    toolIij = Model();
-    @variable(toolIij, θ[1:m.nbus]);
-    @variable(toolIij, V[1:m.nbus]);
-    @objective(toolIij, Min, 0.0);
-    for k=1:m.nbr                               f = m.br[k][1];                         t = m.br[k][2];
-        y¹ = abs2(m.gf[k] + (m.bf[k])im);       y² = abs2(m.Gf[k] + (m.Bf[k])im);       y³ = 2 * abs(m.gf[k] + (m.bf[k])im) * abs(m.Gf[k] + (m.Bf[k])im);
-        θ¹ = angle(m.gf[k] + (m.bf[k])im);      θ² = angle(m.Gf[k] + (m.Bf[k])im); 
-        @NLconstraint(toolIij, y¹ * V[f]^2 + y² * V[t]^2 + y³ * V[f] * V[t] * cos(θ[f] - θ[t] + θ¹ - θ²) <= m.Imax[k]^2);
-    end
-    m.toolIij = NLPEvaluator(toolIij);
-    MOI.initialize(m.toolIij, [:Grad, :Hess]);
-
-    "Optimization tool for Iji"
-    toolIji = Model();
-    @variable(toolIji, θ[1:m.nbus]);
-    @variable(toolIji, V[1:m.nbus]);
-    @objective(toolIji, Min, 0.0);
-    # @NLconstraint(toolIji, V .* V .== θ)
-    for k=1:m.nbr                               f = m.br[k][1];                         t = m.br[k][2];
-        y¹ = abs2(m.gt[k] + (m.bt[k])im);       y² = abs2(m.Gt[k] + (m.Bt[k])im);       y³ = 2 * abs(m.gt[k] + (m.bt[k])im) * abs(m.Gt[k] + (m.Bt[k])im);
-        θ¹ = angle(m.gt[k] + (m.bt[k])im);      θ² = angle(m.Gt[k] + (m.Bt[k])im); 
-        @NLconstraint(toolIji, y¹ * V[t]^2 + y² * V[f]^2 + y³ * V[t] * V[f] * cos(θ[t] - θ[f] + θ¹ - θ²) <= m.Imax[k]^2);
-    end
-    m.toolIji = NLPEvaluator(toolIji);
-    MOI.initialize(m.toolIji, [:Grad, :Hess]);
-end=#
 
 function display_preprocess_info(m::PowersenseData)
 	println("---> System Information");

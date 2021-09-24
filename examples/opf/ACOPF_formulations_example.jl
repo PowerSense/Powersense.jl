@@ -1,10 +1,6 @@
 path = ["../examples/opf/14bus/case.raw"; "../examples/opf/14bus/case.rop"]
 
-start_time = time();
-
-network = process_data(path)
-
-M = create_PowersenseData(network)
+M = create_PowersenseData(path)
 
 run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", formulation = PNPAPVmodel);
 

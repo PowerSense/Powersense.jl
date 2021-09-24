@@ -7,7 +7,7 @@ import MathOptInterface, JuMP
 const MOI = MathOptInterface
 const MOIU = MathOptInterface.Utilities
 
-export process_data, create_PowersenseData, display_preprocess_info, run_OPF
+export create_PowersenseData, display_preprocess_info, run_opf!
 
 include("opt/status.jl")
 include("opt/parameters.jl")

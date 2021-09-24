@@ -76,7 +76,8 @@ mutable struct PowersenseData
     )
 end
 
-function create_PowersenseData(network::Dict{String,Any})
+function create_PowersenseData(path)
+    network = process_data(path)
     m = PowersenseData(length(network["bus"]),length(network["gen"]),length(network["branch"]),length(network["sshunt"])-1);
     cost_segments = 30;
     "Assigning bss parameters"

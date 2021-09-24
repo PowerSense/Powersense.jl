@@ -7,7 +7,10 @@
 [![codecov](https://codecov.io/gh/PowerSense/Powersense.jl/branch/master/graph/badge.svg?token=SUH4VPE41D)](https://codecov.io/gh/PowerSense/Powersense.jl)
 <!-- [![Documentation](https://github.com/PowerSense/Powersense.jl/workflows/Documentation/badge.svg)](https://www.powersense.io/) -->
 
-The NLP solver of this Julia package implements active set methods for continuous nonlinear optimization. The package currently implements a sequential linear programming method based on line search.
+The package has the following features implemented and ready to use.
+
+- `OPT`: The nonlinear programming optimization component implements sequential linear programming method for continuous nonlinear optimization. The package currently implements a line search algorithm.
+- `OPF`: The AC optimal power flow (AC-OPF) component implements 7 different AC-OPF formulations. These formulations have different sparsities and are a combination of varieties of different approaches of modeling voltages, admittance matrix, and branch flows. The formulations can be solved using the `OPT` feature of the `Powersense.jl` or using an external NLP solver.
 
 
 ## Installation
@@ -48,6 +51,19 @@ JuMP.optimize!(model)
 
 # Retrieve solution
 Xsol = JuMP.value.(X)
+```
+
+## OPF formulations Example
+
+Consider solving PNPAPVmodel ACOPF formulations. This can be solved using the following code snippet:
+```julia
+# Load packages
+using Powersense, Ipopt
+
+# Build Powersense Data model. Path is the address to where PSSE or MATPOWER file types
+Data = create_PowersenseData(path)
+
+run_opf!(Data, solver = Ipopt.Optimizer, obj_type = "linear", formulation = PNPAPVmodel);
 ```
 
 # Acknowledgements

@@ -8,7 +8,7 @@ start_time = time();
 
 network = process_data(path)
 
-M = create_PowersenseData(network, start_time)
+M = create_PowersenseData(network)
 
 run_opf(M, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
 

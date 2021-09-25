@@ -4,7 +4,7 @@ function process_data(path)
 	network=process_rop(true, path[2], network, bus_shift);
 	return network
     elseif typeof(path) == String
-    	data = parse_file(path);
+    	data = PowerModels.parse_file(path);
     	(network, bus_shift)=process_raw(data);
     	return network
     else

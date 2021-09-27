@@ -2,6 +2,8 @@ module Powersense
 
 using LinearAlgebra
 using SparseArrays
+using Printf
+using Logging
 import MathOptInterface, JuMP, PowerModels
 
 const MOI = MathOptInterface

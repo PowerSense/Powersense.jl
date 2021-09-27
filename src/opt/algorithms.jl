@@ -1,28 +1,19 @@
 """
     AbstractOptimizer
 
-Abstract type of active set solvers
+Abstract type of solvers
 """
 abstract type AbstractOptimizer end
 
 """
-    active_set_optimize!
+    run!
     
-Abstract function of running active set algorithm
+Abstract function of running algorithm
 """
-function active_set_optimize! end
+function run! end
 
 
 include("algorithms/common.jl")
 include("algorithms/merit.jl")
 include("algorithms/subproblem.jl")
-
-
-"""
-    AbstractSlpOptimizer
-
-Abstract type of SLP solvers
-"""
-abstract type AbstractSlpOptimizer <: AbstractOptimizer end
-
-include("algorithms/slp_line_search.jl")
+include("algorithms/slp.jl")

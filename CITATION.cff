@@ -1,0 +1,18 @@
+# YAML 1.2
+---
+authors: 
+  -
+    affiliation: "University of Utah"
+    family-names: Sadat
+    given-names: "Sayed Abdullah"
+    orcid: "https://orcid.org/0000-0001-8290-6065"
+cff-version: "1.1.0"
+keywords: 
+  - "nonlinear programming"
+  - "power system operations"
+  - "optimal power flow"
+  - optimization
+message: "If you use this package, please cite it using this metadata."
+repository-code: "https://github.com/PowerSense/Powersense.jl"
+title: "Powersense.jl"
+...

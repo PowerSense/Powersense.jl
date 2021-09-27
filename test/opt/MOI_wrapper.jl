@@ -4,20 +4,20 @@ const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 const MOIB = MOI.Bridges
 
-const optimizer = ActiveSetMethods.Optimizer()
+const optimizer = Powersense.Optimizer()
 MOI.set(optimizer, MOI.RawParameter("external_optimizer"), GLPK.Optimizer)
 MOI.set(optimizer, MOI.RawParameter("max_iter"), 1000)
 
 const config = MOIT.TestConfig(atol=1e-4, rtol=1e-4,
                                optimal_status=MOI.LOCALLY_SOLVED)
-# DualObjectiveValue is not implemented, so ActiveSetMethods does not pass the tests that
+# DualObjectiveValue is not implemented, so Powersense does not pass the tests that
 # query it.
 # TODO: Consider implementing DualObjectiveValue for purely linear problems.
 const config_no_duals = MOIT.TestConfig(atol=1e-4, rtol=1e-4, duals=false,
                                         optimal_status=MOI.LOCALLY_SOLVED)
 
 @testset "SolverName" begin
-    @test MOI.get(optimizer, MOI.SolverName()) == "ActiveSetMethods"
+    @test MOI.get(optimizer, MOI.SolverName()) == "Powersense"
 end
 
 @testset "supports_default_copy_to" begin
@@ -27,7 +27,7 @@ end
 
 @testset "Unit" begin
     bridged = MOIB.full_bridge_optimizer(
-        ActiveSetMethods.Optimizer(external_optimizer = GLPK.Optimizer),
+        Powersense.Optimizer(external_optimizer = GLPK.Optimizer),
         Float64)
     # A number of test cases are excluded because loadfromstring! works only
     # if the solver supports variable and constraint names.
@@ -70,9 +70,9 @@ end
                "linear7",  # VectorAffineFunction not supported.
                "linear15", # VectorAffineFunction not supported.
                ]
-    model_for_ActiveSetMethods = MOIU.UniversalFallback(MOIU.Model{Float64}())
+    model_for_Powersense = MOIU.UniversalFallback(MOIU.Model{Float64}())
     linear_optimizer = MOI.Bridges.Constraint.SplitInterval{Float64}(
-                         MOIU.CachingOptimizer(model_for_ActiveSetMethods, optimizer))
+                         MOIU.CachingOptimizer(model_for_Powersense, optimizer))
     MOIT.contlineartest(linear_optimizer, config_no_duals, exclude)
     # Tests setting bounds of `SingleVariable` constraint
     MOIT.linear4test(optimizer, config_no_duals)
@@ -107,7 +107,7 @@ MOI.empty!(optimizer)
 end
 
 @testset "Testing getters" begin
-    MOI.Test.copytest(MOI.instantiate(ActiveSetMethods.Optimizer, with_bridge_type=Float64), MOIU.Model{Float64}())
+    MOI.Test.copytest(MOI.instantiate(Powersense.Optimizer, with_bridge_type=Float64), MOIU.Model{Float64}())
 end
 
 @testset "Bounds set twice" begin

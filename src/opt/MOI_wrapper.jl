@@ -124,7 +124,7 @@ function MOI.copy_to(model::Optimizer, src::MOI.ModelLike; copy_names = false)
     return MOIU.default_copy_to(model, src, copy_names)
 end
 
-MOI.get(::Optimizer, ::MOI.SolverName) = "ActiveSetMethods"
+MOI.get(::Optimizer, ::MOI.SolverName) = "Powersense"
 
 MOI.get(model::Optimizer, ::MOI.ObjectiveFunctionType) = typeof(model.objective)
 

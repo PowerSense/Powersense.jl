@@ -6,15 +6,12 @@ const MOIB = MOI.Bridges
 
 const optimizer = Powersense.Optimizer()
 MOI.set(optimizer, MOI.RawParameter("external_optimizer"), GLPK.Optimizer)
-MOI.set(optimizer, MOI.RawParameter("max_iter"), 1000)
+MOI.set(optimizer, MOI.RawParameter("max_iter"), 3000)
+MOI.set(optimizer, MOI.RawParameter("tol_residual"), 1.e-2)
+MOI.set(optimizer, MOI.RawParameter("tol_infeas"), 1.e-2)
+MOI.set(optimizer, MOI.RawParameter("OutputFlag"), 0)
 
-const config = MOIT.TestConfig(atol=1e-4, rtol=1e-4,
-                               optimal_status=MOI.LOCALLY_SOLVED)
-# DualObjectiveValue is not implemented, so Powersense does not pass the tests that
-# query it.
-# TODO: Consider implementing DualObjectiveValue for purely linear problems.
-const config_no_duals = MOIT.TestConfig(atol=1e-4, rtol=1e-4, duals=false,
-                                        optimal_status=MOI.LOCALLY_SOLVED)
+const config_no_duals = MOIT.TestConfig(atol=1e-2, rtol=1e-2, duals=false, optimal_status=MOI.LOCALLY_SOLVED)
 
 @testset "SolverName" begin
     @test MOI.get(optimizer, MOI.SolverName()) == "Powersense"
@@ -25,44 +22,55 @@ end
     @test !MOIU.supports_default_copy_to(optimizer, true)
 end
 
-@testset "Unit" begin
-    bridged = MOIB.full_bridge_optimizer(
-        Powersense.Optimizer(external_optimizer = GLPK.Optimizer),
-        Float64)
+@testset "Unit ($algo)" for algo in ["Line Search", "Trust Region"]
+# @testset "Unit ($algo)" for algo in ["Line Search"]
+    MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
+    bridged = MOIB.full_bridge_optimizer(optimizer, Float64)
     # A number of test cases are excluded because loadfromstring! works only
     # if the solver supports variable and constraint names.
-    exclude = ["delete_variable", # Deleting not supported.
-               "delete_variables", # Deleting not supported.
-               "getvariable", # Variable names not supported.
-               "solve_zero_one_with_bounds_1", # Variable names not supported.
-               "solve_zero_one_with_bounds_2", # Variable names not supported.
-               "solve_zero_one_with_bounds_3", # Variable names not supported.
-               "getconstraint", # Constraint names not suported.
-               "variablenames", # Variable names not supported.
-               "solve_with_upperbound", # loadfromstring!
-               "solve_with_lowerbound", # loadfromstring!
-               "solve_integer_edge_cases", # loadfromstring!
-               "solve_affine_lessthan", # loadfromstring!
-               "solve_affine_greaterthan", # loadfromstring!
-               "solve_affine_equalto", # loadfromstring!
-               "solve_affine_interval", # loadfromstring!
-               "get_objective_function", # Function getters not supported.
-               "solve_constant_obj",  # loadfromstring!
-               "solve_blank_obj", # loadfromstring!
-               "solve_singlevariable_obj", # loadfromstring!
-               "solve_objbound_edge_cases", # ObjectiveBound not supported.
-               "solve_affine_deletion_edge_cases", # Deleting not supported.
-               "solve_unbounded_model", # `NORM_LIMIT`
-               "number_threads", # NumberOfThreads not supported
-               "delete_nonnegative_variables", # get ConstraintFunction n/a.
-               "update_dimension_nonnegative_variables", # get ConstraintFunction n/a.
-               "delete_soc_variables", # VectorOfVar. in SOC not supported
-               "solve_result_index", # DualObjectiveValue not supported
-               ]
+    exclude = [
+        "delete_variable", # Deleting not supported.
+        "delete_variables", # Deleting not supported.
+        "getvariable", # Variable names not supported.
+        "solve_zero_one_with_bounds_1", # Variable names not supported.
+        "solve_zero_one_with_bounds_2", # Variable names not supported.
+        "solve_zero_one_with_bounds_3", # Variable names not supported.
+        "getconstraint", # Constraint names not suported.
+        "variablenames", # Variable names not supported.
+        "solve_with_upperbound", # loadfromstring!
+        "solve_with_lowerbound", # loadfromstring!
+        "solve_integer_edge_cases", # loadfromstring!
+        "solve_affine_lessthan", # loadfromstring!
+        "solve_affine_greaterthan", # loadfromstring!
+        "solve_affine_equalto", # loadfromstring!
+        "solve_affine_interval", # loadfromstring!
+        "get_objective_function", # Function getters not supported.
+        "solve_constant_obj",  # loadfromstring!
+        "solve_blank_obj", # loadfromstring!
+        "solve_singlevariable_obj", # loadfromstring!
+        "solve_objbound_edge_cases", # ObjectiveBound not supported.
+        "solve_affine_deletion_edge_cases", # Deleting not supported.
+        "solve_unbounded_model", # `NORM_LIMIT`
+        "number_threads", # NumberOfThreads not supported
+        "delete_nonnegative_variables", # get ConstraintFunction n/a.
+        "update_dimension_nonnegative_variables", # get ConstraintFunction n/a.
+        "delete_soc_variables", # VectorOfVar. in SOC not supported
+        "solve_result_index", # DualObjectiveValue not supported
+        "solve_farkas_interval_lower",
+        "solve_farkas_lessthan",
+        "solve_farkas_interval_upper",
+        "solve_farkas_greaterthan",
+        "solve_farkas_variable_lessthan_max",
+        "solve_farkas_variable_lessthan",
+        "solve_farkas_equalto_upper",
+        "solve_farkas_equalto_lower",
+    ]
     MOIT.unittest(bridged, config_no_duals, exclude)
+    MOI.empty!(optimizer)
 end
 
-@testset "MOI Linear tests" begin
+@testset "MOI Linear tests ($algo)" for algo in ["Line Search", "Trust Region"]
+    MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
     exclude = ["linear8a", # Behavior in infeasible case doesn't match test.
                "linear12", # Same as above.
                "linear8b", # Behavior in unbounded case doesn't match test.
@@ -75,35 +83,32 @@ end
                          MOIU.CachingOptimizer(model_for_Powersense, optimizer))
     MOIT.contlineartest(linear_optimizer, config_no_duals, exclude)
     # Tests setting bounds of `SingleVariable` constraint
-    MOIT.linear4test(optimizer, config_no_duals)
+    # MOIT.linear1test(linear_optimizer, config_no_duals)
+    MOI.empty!(optimizer)
 end
 
-MOI.empty!(optimizer)
-
-# This tests qp1, qp2, and qp3.
-@testset "MOI QP tests" begin
+# FIXME: LP subproblems are numerically instable in the trust region method.
+@testset "MOI QP tests ($algo)" for algo in ["Line Search"]
+    MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
     qp_optimizer = MOIU.CachingOptimizer(MOIU.Model{Float64}(), optimizer)
-    # SLP returns the max iteration limit for these instances.
-    exclude = ["qp1", "qp2"]
-    MOIT.qptest(qp_optimizer, config_no_duals, exclude)
-    # MOIT.qptest(qp_optimizer, config_no_duals)
+    MOIT.qptest(qp_optimizer, config_no_duals)
+    MOI.empty!(optimizer)
 end
 
-MOI.empty!(optimizer)
-
-@testset "MOI QCQP tests" begin
+@testset "MOI QCQP tests ($algo)" for algo in ["Line Search", "Trust Region"]
+    MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
     qp_optimizer = MOIU.CachingOptimizer(MOIU.Model{Float64}(), optimizer)
     exclude = ["qcp1"] # VectorAffineFunction not supported.
     MOIT.qcptest(qp_optimizer, config_no_duals, exclude)
+    MOI.empty!(optimizer)
 end
 
-MOI.empty!(optimizer)
-
-@testset "MOI NLP tests" begin
-    # TODO: These instances do not converge.
-    exclude = ["hs071_no_hessian", "hs071"]
-    MOIT.nlptest(optimizer, config, exclude)
-    # MOIT.nlptest(optimizer, config)
+# FIXME: LP subproblems are numerically instable in the trust region method.
+@testset "MOI NLP tests ($algo)" for algo in ["Line Search"]
+    MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
+    MOIT.nlptest(optimizer, config_no_duals)
+    # MOIT.hs071_test(optimizer, config_no_duals)
+    MOI.empty!(optimizer)
 end
 
 @testset "Testing getters" begin
@@ -114,3 +119,4 @@ end
     MOI.Test.set_lower_bound_twice(optimizer, Float64)
     MOI.Test.set_upper_bound_twice(optimizer, Float64)
 end
+

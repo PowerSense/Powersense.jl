@@ -20,4 +20,3 @@ ApplicationReturnStatus = Dict(
 -100=>:Unrecoverable_Exception,
 -102=>:Insufficient_Memory,
 -199=>:Internal_Error)
-

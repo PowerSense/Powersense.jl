@@ -2,7 +2,9 @@ module Powersense
 
 using LinearAlgebra
 using SparseArrays
-import MathOptInterface, JuMP
+using Printf
+using Logging
+import MathOptInterface, JuMP, PowerModels
 
 const MOI = MathOptInterface
 const MOIU = MathOptInterface.Utilities

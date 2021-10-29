@@ -1,16 +1,4 @@
 """
-    compute_phi
-
-Compute and return merit function value
-
-# Arguments
-- `f`: objective function value
-- `mu`: penalty parameter
-- `norm_E`: norm of constraint violations
-"""
-compute_phi(f, mu, norm_E) = f + mu * norm_E
-
-"""
     compute_mu_merit
 
 Compute the penalty parameter of merit function

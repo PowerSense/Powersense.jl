@@ -226,6 +226,7 @@ Solve subproblem
 - `feasibility`: indicator for feasibility restoration phase 
 - `tol_error`: threshold to drop small numbers to zeros
 """
+
 function sub_optimize!(
     qp::QpModel{T,Tv,Tm},
     x_k::Tv,
@@ -537,7 +538,6 @@ function sub_optimize!(
     else
         @error "Unexpected status: $(status)"
     end
-
     return Xsol, lambda, mult_x_U, mult_x_L, p_slack, status
 end
 

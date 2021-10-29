@@ -329,6 +329,7 @@ function collect_statistics(slp::SlpLS)
     if slp.options.StatisticsFlag == 0
         return
     end
+    mode = (slp.feasibility_restoration) ? "FR" : "OPT"
     add_statistics(slp.problem, "f(x)", slp.f)
     add_statistics(slp.problem, "ϕ(x_k))", slp.phi)
     add_statistics(slp.problem, "D(ϕ,p)", slp.directional_derivative)
@@ -336,6 +337,7 @@ function collect_statistics(slp::SlpLS)
     add_statistics(slp.problem, "|J|2", norm(slp.dE, 2))
     add_statistics(slp.problem, "|J|inf", norm(slp.dE, Inf))
     add_statistics(slp.problem, "inf_pr", slp.prim_infeas)
+    add_statistics(slp.problem, "mode", mode)
     # add_statistics(slp.problem, "inf_du", dual_infeas)
     add_statistics(slp.problem, "compl", slp.compl)
     add_statistics(slp.problem, "alpha", slp.alpha)

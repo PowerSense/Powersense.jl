@@ -88,8 +88,7 @@ function compute_phi(slp::AbstractSlpOptimizer, x::Tv, α::T, p::Tv) where {T,Tv
             ϕ += α * sum(v)
         end
         for i = 1:slp.problem.m
-            viol = 0.0
-                maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
+            viol = maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
             lhs = E[i] - viol
             if slp.problem.g_L[i] > -Inf && slp.problem.g_U[i] < Inf
                 lhs += α * (p_slack[i][1] - p_slack[i][2])
@@ -127,8 +126,7 @@ function compute_derivative(slp::AbstractSlpOptimizer)
             D += sum(v)
         end
         for i = 1:slp.problem.m
-            viol = 0.0
-                maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
+            viol = maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
             lhs = slp.E[i] - viol
             D -=
                 slp.ν[i] *

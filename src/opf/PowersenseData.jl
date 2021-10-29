@@ -151,9 +151,8 @@ function create_PowersenseData(path)
             push!(m.pgh[i],0);
         end
     end
-    m.source_type = "arpae"
-    "Assigning bus parameters"
-    @simd for i=1:m.nbus bus=network["bus"][string(i)]; 
+     "Assigning bus parameters"
+    for key in keys(network["bus"]) bus=network["bus"][key]; i = bus["adjusted_bus"];
         m.Vmax[i] = bus["vmax"];          
         m.Vmin[i] = bus["vmin"];
         m.Pd[i] = bus["Pd"];
@@ -176,7 +175,8 @@ function create_PowersenseData(path)
         m.bf[i] = st * (br["bfM"] + (b + br["b_fr"]) / (br["tap"] * br["tap"]));
         m.gt[i] = st * (g + br["g_fr"]);
         m.bt[i] = st * (b + br["b_fr"]);
-        m.Imax[i] = st * br["rate_a"];
+        m.Imax[i] = haskey(br,"rate_a") ? st * br["rate_a"] : 10000 ;
+        m.Imax[i] = m.Imax[i] == 0 ? 10000 : m.Imax[i] ;
         m.Aij[f,i] = 1.0;
         m.Aji[t,i] = 1.0; 
         push!(m.br, (f,t));
@@ -184,7 +184,6 @@ function create_PowersenseData(path)
     m.node = network["nbal"];
     return m
 end
-
 
 
 function display_preprocess_info(m::PowersenseData)

@@ -17,7 +17,7 @@ function update_format(network)
     series = 0
     for i in keys(network["bus"]) series += 1
         bus_index=merge(bus_index, Dict(i=>series));
-        network["bus"][i]=merge(network["bus"][i], Dict("adjusted_bus"=>series));
+        network["bus"][i]=merge(network["bus"][i], Dict("index"=>series));
         network["bus"][i]=merge(network["bus"][i], Dict("gen"=>false));
         network["bus"][i]=merge(network["bus"][i], Dict("Pd"=>0.0));
         network["bus"][i]=merge(network["bus"][i], Dict("Qd"=>0.0));

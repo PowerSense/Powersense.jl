@@ -152,7 +152,7 @@ function create_PowersenseData(path)
         end
     end
      "Assigning bus parameters"
-    for key in keys(network["bus"]) bus=network["bus"][key]; i = bus["adjusted_bus"];
+    for key in keys(network["bus"]) bus=network["bus"][key]; i = bus["index"];
         m.Vmax[i] = bus["vmax"];          
         m.Vmin[i] = bus["vmin"];
         m.Pd[i] = bus["Pd"];

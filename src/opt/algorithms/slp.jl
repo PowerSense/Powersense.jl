@@ -42,7 +42,8 @@ function sub_optimize!(slp::AbstractSlpOptimizer, Δ = 1000.0)
         slp.optimizer,
         slp.x,
         Δ,
-        slp.feasibility_restoration
+        slp.feasibility_restoration,
+        slp.options.tol_error,
     )
 end
 
@@ -87,7 +88,7 @@ function compute_phi(slp::AbstractSlpOptimizer, x::Tv, α::T, p::Tv) where {T,Tv
             ϕ += α * sum(v)
         end
         for i = 1:slp.problem.m
-            viol =
+            viol = 0.0
                 maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
             lhs = E[i] - viol
             if slp.problem.g_L[i] > -Inf && slp.problem.g_U[i] < Inf
@@ -126,7 +127,7 @@ function compute_derivative(slp::AbstractSlpOptimizer)
             D += sum(v)
         end
         for i = 1:slp.problem.m
-            viol =
+            viol = 0.0
                 maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
             lhs = slp.E[i] - viol
             D -=

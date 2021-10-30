@@ -60,7 +60,7 @@ Consider solving PNPAPVmodel ACOPF formulations. This can be solved using the fo
 # Load packages
 using Powersense, Ipopt
 
-# Build Powersense Data model. Path is the address to where PSSE or MATPOWER file types
+# Build Powersense Data model. Path is the address where PSSE or MATPOWER files are located.
 Data = create_PowersenseData(path)
 
 run_opf!(Data, solver = Ipopt.Optimizer, obj_type = "linear", formulation = PNPAPVmodel);

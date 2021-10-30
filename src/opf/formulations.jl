@@ -296,24 +296,24 @@ function create_opf_model!(data::PowersenseData;
 
     if box_constraints
         # add_box_constraints(data, formulation)
-        if formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] && voltage
+        if formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
             JuMP.@constraint(data.model, data.Vmin .<= vi .<= data.Vmax);                       
             JuMP.@constraint(data.model, data.Vmin .<= vr .<= data.Vmax); 
         end
-        if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] && voltage
+        if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
             for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
                 JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wr[k] <= data.Vmax[f] * data.Vmax[t]);
                 JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wi[k] <= data.Vmax[f] * data.Vmax[t]);
             end
         end
-        if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel] && flow
+        if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel]
             for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
                 JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Pij[k] <= data.Imax[k] * data.Vmax[f]);
                 JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Pji[k] <= data.Imax[k] * data.Vmax[t]);
                 JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Qij[k] <= data.Imax[k] * data.Vmax[f]);
                 JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Qji[k] <= data.Imax[k] * data.Vmax[t]);
             end
-        elseif formulation ∈ [CBRARVmodel, CBRAWVmodel] && flow
+        elseif formulation ∈ [CBRARVmodel, CBRAWVmodel]
             JuMP.@constraint(data.model, - data.Imax .<= Irij .<= data.Imax);
             JuMP.@constraint(data.model, - data.Imax .<= Iiij .<= data.Imax);
             JuMP.@constraint(data.model, - data.Imax .<= Irji .<= data.Imax);

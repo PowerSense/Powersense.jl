@@ -6,15 +6,15 @@ run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", formulation = PNPAPVm
 
 @test isapprox(M.cost, 1.467e+02, rtol=1e-1)
 
-run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", box_constraints = true, formulation = PNPARVmodel);
+run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", box_constraints = true, formulation = PBRARVmodel);
 
 @test isapprox(M.cost, 1.467e+02, rtol=1e-1)
 
-run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", box_constraints = true, formulation = CNPARVmodel);
+run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", box_constraints = false, formulation = CBRARVmodel);
 
 @test isapprox(M.cost, 1.467e+02, rtol=1e-1)
 
-run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", box_constraints = false, formulation = CNPARVmodel);
+run_opf!(M, solver = Ipopt.Optimizer, obj_type = "linear", box_constraints = true, formulation = CBRARVmodel);
 
 @test isapprox(M.cost, 1.467e+02, rtol=1e-1)
 

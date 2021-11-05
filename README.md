@@ -26,7 +26,7 @@ Pkg.add("Powersense")
 
 Consider the following quadratic optimization problem
 
-```
+```julia
 min   x^2 + x 
 s.t.  x^2 - x = 2
 ```

@@ -116,6 +116,7 @@ function run!(slp::SlpLS)
                     convex_optimize!(slp)
                  catch;
                     @info "Convex Feasible Initilization Failed"
+                    slp.x
                  end
     end
 

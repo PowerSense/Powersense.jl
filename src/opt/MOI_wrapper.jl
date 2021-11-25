@@ -1419,7 +1419,7 @@ function MOI.get(model::Optimizer, attr::MOI.NLPBlockDual)
 end
 
 function MOI.get(model::Optimizer, ::MOI.Name)
-    return 
+    return "Powersense"
 end
 
 function MOI.set(model::Optimizer, ::MOI.Name, name::String) 

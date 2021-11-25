@@ -1,4 +1,3 @@
-using Ipopt, Gurobi, GLPK, Tulip
 mutable struct VariableInfo
     lower_bound::Float64  # May be -Inf even if has_lower_bound == true
     has_lower_bound::Bool # Implies lower_bound == Inf
@@ -1047,57 +1046,8 @@ function MOI.optimize!(model::Optimizer)
     MOI.initialize(evaluator, init_feat)
     jacobian_sparsity = jacobian_structure(model)
     hessian_sparsity = has_hessian ? hessian_lagrangian_structure(model) : Tuple{Int,Int}[]
-
-
-
-
-    # @show model
-    # @show model.linear_le_constraints
     convex_model = deepcopy(model);
-    # @show model2
-    # @show model2.linear_le_constraints
-    # @show model2.objective
     convex_model.objective = MOI.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[], 0.0)
-    # @show model2.objective
-    # ScalarQuadraticFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(1400.0, MathOptInterface.VariableIndex(7)), MathOptInterface.ScalarAffineTerm{Float64}(1500.0, MathOptInterface.VariableIndex(8)), MathOptInterface.ScalarAffineTerm{Float64}(3000.0, MathOptInterface.VariableIndex(9))], MathOptInterface.ScalarQuadraticTerm{Float64}[], 0.0)
-
-    # MOI.delete(model2, model2.linear_le_constraints)
-    # model3 = MOI.instantiate(Ipopt.Optimizer)
-    # MOI.ModelFilter(ListOfModelAttributesSet(),model2)
-    # @show model3.affine_constraint_info
-    # @show model3.variable_info
-    # @show model3.indicator_constraint_info
-    # @show model3.linear_le_constraints
-    # @show model3.linear_ge_constraints
-    # @show model3.linear_eq_constraints
-    # @show model3.quadratic_le_constraints
-    # @show model3.quadratic_ge_constraints
-    # @show model3.quadratic_eq_constraints
-    #=
-    MOIU.reset_optimizer(model2)
-    for i = 1:num_variables
-        MOI.modify(
-            model2,
-            MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
-            MOI.ScalarCoefficientChange(MOI.VariableIndex(i), 0),
-        )
-    end=#
-    # model3 = Tulip.Optimizer()
-
-    # @show model3
-
-    # solver4 = Tulip.Optimizer
-    # model4 = MOI.instantiate(solver4)
-    # MOI.copy_to(model4, convex_model)
-    # @show model4
-    # @show typeof(model4)            
-    # MOI.copy_to(model3, model2)
-    # MOI.optimize!(model3)
-    # objj = MOI.get(model3, MOI.ObjectiveValue())
-    # sta = MOI.get(model3, MOI.TerminationStatus())
-
-    # @show sta
-    # @show objj
 
     if model.sense == MOI.MIN_SENSE
         objective_scale = 1.0

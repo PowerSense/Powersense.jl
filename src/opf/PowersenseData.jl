@@ -193,7 +193,7 @@ function display_preprocess_info(m::PowersenseData)
 	println(" Branches#: ", m.nbr); 
 	println(" Controllable Shunts#: ", m.nbss); 
 	println(" Threads: ", Threads.nthreads()); 
-	println(" ... time_stamp: ", time()-m.start_time, " seconds"); 
+	#println(" ... time_stamp: ", time()-m.start_time, " seconds"); 
 	println("\n");
 end
 

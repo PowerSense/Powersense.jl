@@ -196,7 +196,6 @@ function create_model!(qp::QpModel{T,Tv,Tm}, x_k::Tv, Δ::T, tol_error = 0.0) wh
             )
         end
     end
-
     for i in qp.adj
         c_ub = qp.data.c_ub[i] - qp.data.b[i]
         c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
@@ -232,8 +231,7 @@ function sub_optimize!(
     x_k::Tv,
     Δ::T,
     feasibility = false,
-    tol_error = 0.0,
-) where {T,Tv,Tm}
+    tol_error = 0.0,) where {T,Tv,Tm}
 
     # dimension of LP
     m, n = size(qp.data.A)
@@ -434,7 +432,6 @@ function sub_optimize!(
         MOI.set(qp.model, MOI.ConstraintSet(), qp.constr_v_lb[i], MOI.GreaterThan(lb))
     end
     # @show Δ, qp.data.v_lb, qp.data.v_ub, x_k
-
     # modify the constraint coefficients
     for i = 1:length(qp.j_row)
         coeff =

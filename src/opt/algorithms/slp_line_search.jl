@@ -104,6 +104,21 @@ function run!(slp::SlpLS)
         end
     end
 
+    # @show slp.problem.x_U
+    # @show slp.x
+    # @show slp.problem.x_L
+    if slp.options.ConvexFeasibleInitialization > 0
+        slp.x = convex_optimize!(slp)
+    end
+
+    # if slp.options.ConvexFeasibleInitialization > 0
+    #     slp.x .= try 
+    #                 convex_optimize!(slp)
+    #              catch;
+    #                 @info "Convex Feasible Initilization Failed"
+    #              end
+    # end
+
     slp.iter = 1
     is_valid_step = true
     while true

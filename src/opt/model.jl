@@ -26,6 +26,7 @@ mutable struct Model{T,Tv,Tt}
 
     # For MathProgBase
     sense::Symbol
+    convex_model
 
     parameters::Parameters
     statistics::Dict{String,Any}   # collects parameters of all iterations inside the algorithm if StatisticsFlag > 0
@@ -44,7 +45,8 @@ mutable struct Model{T,Tv,Tt}
         eval_grad_f::Function,
         eval_jac_g::Function,
         eval_h::Union{Function,Nothing},
-        parameters::Parameters
+        parameters::Parameters,
+        convex_model
     ) where {T, Tv<:AbstractArray{T}, Tt<:AbstractArray{Tuple{Int64,Int64}}} = new{T,Tv,Tt}(
         n, m,
         zeros(n), x_L, x_U,
@@ -54,7 +56,7 @@ mutable struct Model{T,Tv,Tt}
         0.0,
         -5,
         eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h, 
-        nothing, :Min,
+        nothing, :Min, convex_model,
         parameters,
         Dict{String,Any}()
     )

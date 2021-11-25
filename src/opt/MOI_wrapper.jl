@@ -1419,11 +1419,11 @@ function MOI.get(model::Optimizer, attr::MOI.NLPBlockDual)
 end
 
 function MOI.get(model::Optimizer, ::MOI.Name)
-    return MOI.Name()
+    return
 end
 
 function MOI.set(model::Optimizer, ::MOI.Name, name::String) 
-    return MOI.Name()
+    return
 end
 function MOI.get(model::Optimizer, ::MOI.ListOfVariableAttributesSet)
     ret = MOI.AbstractVariableAttribute[]

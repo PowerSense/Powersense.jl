@@ -61,6 +61,7 @@ function norm_complementarity(
             compl[i] = 0.0
         else
             compl[i] = min(E[i] - g_L[i], g_U[i] - E[i]) * lambda[i]
+            compl[i] = isnan(compl[i]) ? 0.0 : compl[i]
             denom += lambda[i]^2
         end
     end

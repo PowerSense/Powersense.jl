@@ -95,6 +95,7 @@ function MOI.supports(::Optimizer,
     return true
 end
 
+MOI.supports(::Optimizer, ::MOI.Name) = true
 MOI.supports(::Optimizer, ::MOI.ObjectiveSense) = true
 
 MOI.supports(::Optimizer, ::MOI.AbstractOptimizer) = true
@@ -139,6 +140,18 @@ MOI.get(model::Optimizer, ::MOI.NumberOfConstraints{MOI.SingleVariable, MOI.Grea
 
 function MOI.get(model::Optimizer, ::MOI.ListOfVariableIndices)
     return [MOI.VariableIndex(i) for i in 1:length(model.variable_info)]
+end
+
+function MOI.get(model::Optimizer, ::MOI.ListOfModelAttributesSet)
+    attributes = Any[MOI.ObjectiveSense()]
+    typ = MOI.get(model, MOI.ObjectiveFunctionType())
+    if typ !== nothing
+        push!(attributes, MOI.ObjectiveFunction{typ}())
+    end
+    if MOI.get(model, MOI.Name()) != ""
+        push!(attributes, MOI.Name())
+    end
+    return attributes
 end
 
 
@@ -202,6 +215,29 @@ function MOI.get(
     return MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64}, MOI.GreaterThan{Float64}}.(eachindex(model.linear_ge_constraints))
 end
 
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ListOfConstraintIndices{MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}}
+)
+    return MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}}.(eachindex(model.quadratic_le_constraints))
+end
+
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ListOfConstraintIndices{MOI.ScalarQuadraticFunction{Float64}, MOI.EqualTo{Float64}}
+)
+    return MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.EqualTo{Float64}}.(eachindex(model.quadratic_eq_constraints))
+end
+
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ListOfConstraintIndices{MOI.ScalarQuadraticFunction{Float64}, MOI.GreaterThan{Float64}}
+)
+    return MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.GreaterThan{Float64}}.(eachindex(model.quadratic_ge_constraints))
+end
+
 
 function MOI.get(model::Optimizer, ::MOI.ListOfConstraintIndices{MOI.SingleVariable, MOI.LessThan{Float64}})
     dict = Dict(model.variable_info[i] => i for i in 1:length(model.variable_info))
@@ -246,6 +282,30 @@ function MOI.get(
     return model.linear_ge_constraints[c.value].func
 end
 
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ConstraintFunction,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}}
+)
+    return model.quadratic_le_constraints[c.value].func
+end
+
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ConstraintFunction,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.EqualTo{Float64}}
+)
+    return model.quadratic_eq_constraints[c.value].func
+end
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ConstraintFunction,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.GreaterThan{Float64}}
+)
+    return model.quadratic_ge_constraints[c.value].func
+end
 
 function MOI.get(
     model::Optimizer,
@@ -293,6 +353,30 @@ function MOI.get(
     c::MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64}, MOI.GreaterThan{Float64}}
 )
     return model.linear_ge_constraints[c.value].set
+end
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ConstraintSet,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}}
+)
+    return model.quadratic_le_constraints[c.value].set
+end
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ConstraintSet,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.EqualTo{Float64}}
+)
+    return model.quadratic_eq_constraints[c.value].set
+end
+
+function MOI.get(
+    model::Optimizer,
+    ::MOI.ConstraintSet,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64}, MOI.GreaterThan{Float64}}
+)
+    return model.quadratic_ge_constraints[c.value].set
 end
 
 function MOI.get(
@@ -1034,6 +1118,43 @@ function MOI.optimize!(model::Optimizer)
     jacobian_sparsity = jacobian_structure(model)
     hessian_sparsity = has_hessian ? hessian_lagrangian_structure(model) : Tuple{Int,Int}[]
 
+    convex_model = MOI.instantiate(model.options.external_optimizer)
+
+    if model.options.ConvexFeasibleInitialization >= 1 
+        MOI.add_variables(convex_model, 3 * num_variables)
+        MOI.set(
+            convex_model,
+            MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
+            MOI.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm.(ones(2 * num_variables),
+            MOI.VariableIndex.(num_variables+1:3*num_variables)), 0.0),
+        )
+        MOI.set(convex_model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+        for i = 1:num_variables
+            MOI.add_constraint(convex_model, MOI.SingleVariable(MOI.VariableIndex(num_variables + i)), MOI.GreaterThan(0.0))
+            MOI.add_constraint(convex_model, MOI.SingleVariable(MOI.VariableIndex(2 * num_variables + i)), MOI.GreaterThan(0.0))
+        end
+        for constr in model.linear_le_constraints
+            MOI.add_constraint(convex_model, constr.func, constr.set)
+        end
+        for constr in model.linear_ge_constraints
+            MOI.add_constraint(convex_model, constr.func, constr.set)
+        end
+        for constr in model.linear_eq_constraints
+            MOI.add_constraint(convex_model, constr.func, constr.set)
+        end
+    end 
+    if model.options.ConvexFeasibleInitialization > 1
+        for constr in model.quadratic_le_constraints
+            MOI.add_constraint(convex_model, constr.func, constr.set)
+        end
+        for constr in model.quadratic_ge_constraints
+            MOI.add_constraint(convex_model, constr.func, constr.set)
+        end
+        for constr in model.quadratic_eq_constraints
+            MOI.add_constraint(convex_model, constr.func, constr.set)
+        end
+    end
+
     if model.sense == MOI.MIN_SENSE
         objective_scale = 1.0
     elseif model.sense == MOI.MAX_SENSE
@@ -1089,6 +1210,15 @@ function MOI.optimize!(model::Optimizer)
     x_u = [v.upper_bound for v in model.variable_info]
 
     constraint_lb, constraint_ub = constraint_bounds(model)
+    # g_order = [0;0;5];
+    g_order = [length(model.linear_le_constraints);
+               length(model.linear_ge_constraints);
+               length(model.linear_eq_constraints);
+               length(model.quadratic_le_constraints);
+               length(model.quadratic_ge_constraints);
+               length(model.quadratic_eq_constraints);
+               0]
+    g_order[7] = num_constraints - sum(g_order[1:6])         
 
     model.inner = Model(
         num_variables, num_constraints, 
@@ -1096,7 +1226,7 @@ function MOI.optimize!(model::Optimizer)
         constraint_lb, constraint_ub, 
         jacobian_sparsity, hessian_sparsity,
         eval_f_cb, eval_g_cb, eval_grad_f_cb, eval_jac_g_cb, eval_h_cb,
-        model.options)
+        model.options, g_order, convex_model)
 
     # Ipopt crashes by default if NaN/Inf values are returned from the
     # evaluation callbacks. This option tells Ipopt to explicitly check for them
@@ -1402,3 +1532,80 @@ function MOI.get(model::Optimizer, attr::MOI.NLPBlockDual)
     # return -1 * model.inner.mult_g[(1 + nlp_constraint_offset(model)):end]
     return model.inner.mult_g[(1 + nlp_constraint_offset(model)):end]
 end
+
+function MOI.get(model::Optimizer, ::MOI.Name)
+    return
+end
+
+function MOI.set(model::Optimizer, ::MOI.Name, name::String) 
+    return
+end
+function MOI.get(model::Optimizer, ::MOI.ListOfVariableAttributesSet)
+    ret = MOI.AbstractVariableAttribute[]
+    return ret
+end
+function MOI.get(model::Optimizer, ::MOI.ListOfConstraintAttributesSet)
+    return MOI.AbstractConstraintAttribute[]
+end
+#MOI.AbstractConstraintAttribute[MOI.ConstraintName()]
+function MOI.supports(::Optimizer, ::MOI.ConstraintName, ::Type{<:MOI.ConstraintIndex},)
+    return false
+end
+function MOI.get(model::Optimizer, ::MOI.ConstraintName, c::MOI.ConstraintIndex{MOI.VariableIndex,S},) where {S} MOI.throw_if_not_valid(model, c)
+    if S <: MOI.LessThan
+        return info.lessthan_name
+    end
+end
+function MOI.get(model::Optimizer, ::MOI.ConstraintName, c::MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},<:Any},)
+    return 
+end
+function MOI.get(model::Optimizer, ::MOI.ConstraintName, c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64},S},) where {S}
+    return
+end
+function MOI.get(model::Optimizer, ::MOI.ConstraintName, c::MOI.ConstraintIndex{MOI.VectorOfVariables,<:Any},) where {S}
+    return 
+end
+function MOI.get(model::Optimizer, ::MOI.ConstraintName, c::MOI.ConstraintIndex{MOI.VectorOfVariables,MOI.SecondOrderCone},)
+    return
+end
+function MOI.set(
+    model::Optimizer,
+    ::MOI.ConstraintName,
+    c::MOI.ConstraintIndex{MOI.VariableIndex,S},
+    name::String,
+) where {S}
+    return
+end
+function MOI.set(
+    model::Optimizer,
+    ::MOI.ConstraintName,
+    c::MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},<:Any},
+    name::String,
+)
+    return
+end
+function MOI.set(
+    model::Optimizer,
+    ::MOI.ConstraintName,
+    c::MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{Float64},S},
+    name::String,
+) where {S}
+    return
+end
+function MOI.set(
+    model::Optimizer,
+    ::MOI.ConstraintName,
+    c::MOI.ConstraintIndex{MOI.VectorOfVariables,<:Any},
+    name::String,
+)
+    return
+end
+function MOI.set(
+    model::Optimizer,
+    ::MOI.ConstraintName,
+    c::MOI.ConstraintIndex{MOI.VectorOfVariables,MOI.SecondOrderCone},
+    name::String,
+)
+    return
+end
+

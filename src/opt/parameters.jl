@@ -10,8 +10,9 @@ Base.@kwdef mutable struct Parameters
     hessian_type::String = "none"
     
     # flags
-    OutputFlag::Int = 1	   # 0 supresses all outputs except warnings and errors
-    StatisticsFlag::Int = 0	   # 0 supresses collection of statistics parameters
+    OutputFlag::Int = 1	                      # 0 supresses all outputs except warnings and errors
+    StatisticsFlag::Int = 0	                  # 0 supresses collection of statistics parameters
+    ConvexFeasibleInitialization::Int = 1
 
     # Algorithmic parameters
     tol_direction::Float64 = 1.e-6  # tolerance for the norm of direction

@@ -25,12 +25,14 @@ mutable struct QpModel{T,Tv<:AbstractArray{T},Tm<:AbstractMatrix{T}} <: Abstract
     constr::Vector{MOI.ConstraintIndex}
     slack_vars::Dict{Int,Vector{MOI.VariableIndex}}
     constr_slack::Vector{MOI.ConstraintIndex}
+    g_order::Vector{Int}
 
     function QpModel(
         model::MOI.AbstractOptimizer,
         data::QpData{T,Tv,Tm},
         j_row::Vector{Int},
         j_col::Vector{Int},
+        g_order::Vector{Int},
     ) where {T,Tv,Tm}
         qp = new{T,Tv,Tm}()
         qp.model = model
@@ -44,6 +46,7 @@ mutable struct QpModel{T,Tv<:AbstractArray{T},Tm<:AbstractMatrix{T}} <: Abstract
         qp.constr = []
         qp.constr_slack = []
         qp.slack_vars = Dict()
+        qp.g_order = g_order
         return qp
     end
 end
@@ -134,7 +137,123 @@ function create_model!(qp::QpModel{T,Tv,Tm}, x_k::Tv, Δ::T, tol_error = 0.0) wh
         )
     end
 
-    for i = 1:m
+    # @show qp.g_order
+
+    for i in 1:qp.g_order[1]
+        c_ub = qp.data.c_ub[i] - qp.data.b[i]
+        c_lb = qp.data.c_lb[i] - qp.data.b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+        push!(
+                qp.constr,
+                MOI.add_constraint(
+                    qp.model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.([-1.0], [qp.slack_vars[i][1]]),
+                        0.0,
+                    ),
+                    MOI.LessThan(c_ub),
+                ),
+        )
+    end
+
+    for i in qp.g_order[1]+1:qp.g_order[1]+qp.g_order[2]
+        c_ub = qp.data.c_ub[i] - qp.data.b[i]
+        c_lb = qp.data.c_lb[i] - qp.data.b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+        push!(
+                qp.constr,
+                MOI.add_constraint(
+                    qp.model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.([1.0], [qp.slack_vars[i][1]]),
+                        0.0,
+                    ),
+                    MOI.GreaterThan(c_lb),
+                ),
+        )
+    end
+
+    for i in qp.g_order[1]+qp.g_order[2]+1:qp.g_order[1]+qp.g_order[2]+qp.g_order[3]
+        c_ub = qp.data.c_ub[i] - qp.data.b[i]
+        c_lb = qp.data.c_lb[i] - qp.data.b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+        push!(
+                qp.constr,
+                MOI.add_constraint(
+                    qp.model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.(
+                            [1.0; -1.0],
+                            [qp.slack_vars[i][1]; qp.slack_vars[i][2]],
+                        ),
+                        0.0,
+                    ),
+                    MOI.EqualTo(c_lb),
+                ),
+        )
+    end
+        
+    for i in sum(qp.g_order[1:3])+1:sum(qp.g_order[1:3])+qp.g_order[4]
+        c_ub = qp.data.c_ub[i] - qp.data.b[i]
+        c_lb = qp.data.c_lb[i] - qp.data.b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+        push!(
+                qp.constr,
+                MOI.add_constraint(
+                    qp.model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.([-1.0], [qp.slack_vars[i][1]]),
+                        0.0,
+                    ),
+                    MOI.LessThan(c_ub),
+                ),
+        )
+    end
+
+    for i in sum(qp.g_order[1:4])+1:sum(qp.g_order[1:4])+qp.g_order[5]
+        c_ub = qp.data.c_ub[i] - qp.data.b[i]
+        c_lb = qp.data.c_lb[i] - qp.data.b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+        push!(
+                qp.constr,
+                MOI.add_constraint(
+                    qp.model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.([1.0], [qp.slack_vars[i][1]]),
+                        0.0,
+                    ),
+                    MOI.GreaterThan(c_lb),
+                ),
+        )
+    end
+
+    for i in sum(qp.g_order[1:5])+1:sum(qp.g_order[1:5])+qp.g_order[6]
+        c_ub = qp.data.c_ub[i] - qp.data.b[i]
+        c_lb = qp.data.c_lb[i] - qp.data.b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+        push!(
+                qp.constr,
+                MOI.add_constraint(
+                    qp.model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.(
+                            [1.0; -1.0],
+                            [qp.slack_vars[i][1]; qp.slack_vars[i][2]],
+                        ),
+                        0.0,
+                    ),
+                    MOI.EqualTo(c_lb),
+                ),
+        )
+    end 
+
+    for i in sum(qp.g_order[1:6])+1:sum(qp.g_order[1:6])+qp.g_order[7]
         c_ub = qp.data.c_ub[i] - qp.data.b[i]
         c_lb = qp.data.c_lb[i] - qp.data.b[i]
         c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
@@ -196,7 +315,6 @@ function create_model!(qp::QpModel{T,Tv,Tm}, x_k::Tv, Δ::T, tol_error = 0.0) wh
             )
         end
     end
-
     for i in qp.adj
         c_ub = qp.data.c_ub[i] - qp.data.b[i]
         c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
@@ -232,8 +350,7 @@ function sub_optimize!(
     x_k::Tv,
     Δ::T,
     feasibility = false,
-    tol_error = 0.0,
-) where {T,Tv,Tm}
+    tol_error = 0.0,) where {T,Tv,Tm}
 
     # dimension of LP
     m, n = size(qp.data.A)
@@ -434,7 +551,6 @@ function sub_optimize!(
         MOI.set(qp.model, MOI.ConstraintSet(), qp.constr_v_lb[i], MOI.GreaterThan(lb))
     end
     # @show Δ, qp.data.v_lb, qp.data.v_ub, x_k
-
     # modify the constraint coefficients
     for i = 1:length(qp.j_row)
         coeff =
@@ -459,7 +575,56 @@ function sub_optimize!(
     # @show qp.data.A, qp.j_row, qp.j_col
 
     # modify RHS
-    for i = 1:m
+    for i in 1:qp.g_order[1]
+        c_ub = qp.data.c_ub[i] - b[i]
+        c_lb = qp.data.c_lb[i] - b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+
+        MOI.set(qp.model, MOI.ConstraintSet(), qp.constr[i], MOI.LessThan(c_ub))
+    end
+    for i in qp.g_order[1]+1:qp.g_order[1]+qp.g_order[2]
+        c_ub = qp.data.c_ub[i] - b[i]
+        c_lb = qp.data.c_lb[i] - b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+
+        MOI.set(qp.model, MOI.ConstraintSet(), qp.constr[i], MOI.GreaterThan(c_lb))
+    end
+    for i in sum(qp.g_order[1:2])+1:sum(qp.g_order[1:2])+qp.g_order[3]
+        c_ub = qp.data.c_ub[i] - b[i]
+        c_lb = qp.data.c_lb[i] - b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+
+        MOI.set(qp.model, MOI.ConstraintSet(), qp.constr[i], MOI.EqualTo(c_lb))
+    end
+    for i in sum(qp.g_order[1:3])+1:sum(qp.g_order[1:3])+qp.g_order[4]
+        c_ub = qp.data.c_ub[i] - b[i]
+        c_lb = qp.data.c_lb[i] - b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+
+        MOI.set(qp.model, MOI.ConstraintSet(), qp.constr[i], MOI.LessThan(c_ub))
+    end
+    for i in sum(qp.g_order[1:4])+1:sum(qp.g_order[1:4])+qp.g_order[5]
+        c_ub = qp.data.c_ub[i] - b[i]
+        c_lb = qp.data.c_lb[i] - b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+
+        MOI.set(qp.model, MOI.ConstraintSet(), qp.constr[i], MOI.GreaterThan(c_lb))
+    end
+    for i in sum(qp.g_order[1:5])+1:sum(qp.g_order[1:5])+qp.g_order[6]
+        c_ub = qp.data.c_ub[i] - b[i]
+        c_lb = qp.data.c_lb[i] - b[i]
+        c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
+        c_lb = (abs(c_lb) <= tol_error) ? 0.0 : c_lb
+
+        MOI.set(qp.model, MOI.ConstraintSet(), qp.constr[i], MOI.EqualTo(c_lb))
+    end
+
+    for i in sum(qp.g_order[1:6])+1:sum(qp.g_order[1:6])+qp.g_order[7]
         c_ub = qp.data.c_ub[i] - b[i]
         c_lb = qp.data.c_lb[i] - b[i]
         c_ub = (abs(c_ub) <= tol_error) ? 0.0 : c_ub
@@ -538,6 +703,15 @@ function sub_optimize!(
     else
         @error "Unexpected status: $(status)"
     end
+    # @show -Inf in Xsol
+    # @show -Inf in lambda
+    # @show -Inf in mult_x_U
+    # @show -Inf in mult_x_L
+    # @show status
+    # @show Xsol
+    # @show lambda
+    # @show mult_x_U
+    # @show mult_x_L
     return Xsol, lambda, mult_x_U, mult_x_L, p_slack, status
 end
 

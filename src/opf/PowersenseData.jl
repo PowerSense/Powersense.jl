@@ -40,12 +40,18 @@ mutable struct PowersenseData
     Gl::Vector{Float64}
     Bl::Vector{Float64}
 
-    P::Vector{Float64}
-    Q::Vector{Float64}
-    Iij::Vector{Float64}
-    Iji::Vector{Float64}
+    
+    Iiij::Vector{Float64}
+    Iiji::Vector{Float64}
+    Irij::Vector{Float64}
+    Irji::Vector{Float64}
     Pij::Vector{Float64}
     Qij::Vector{Float64}
+    Pji::Vector{Float64}
+    Qji::Vector{Float64}
+
+    P::Vector{Float64}
+    Q::Vector{Float64}
     lps::Vector{Int}
     pgh::Vector{Vector{Float64}}
     cgh::Vector{Vector{Float64}}
@@ -70,7 +76,8 @@ mutable struct PowersenseData
         nbus,ngen,nbr,nbss,zeros(nbus),zeros(nbus),zeros(ngen),zeros(ngen),zeros(ngen),zeros(ngen),zeros(nbss),zeros(nbss),zeros(nbr),
         zeros(ngen),zeros(ngen),zeros(nbss),ones(nbus),zeros(nbus), zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
         ones(nbus),zeros(nbus),Array{Tuple{Int64,Int64},1}(),Dict(),zeros(nbus),zeros(nbus),zeros(nbus),zeros(nbus),        
-        zeros(nbus),zeros(nbus),zeros(nbr),zeros(nbr),zeros(2*nbr),zeros(2*nbr),zeros(ngen),Vector{Vector{Float64}}(),Vector{Vector{Float64}}(),
+        zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
+        zeros(nbus),zeros(nbus),zeros(ngen),Vector{Vector{Float64}}(),Vector{Vector{Float64}}(),
         0.0,zeros(ngen),zeros(ngen),zeros(ngen),0, " ",
         zeros(ngen),1,spzeros(nbus, ngen),spzeros(nbus, nbss),spzeros(nbus, nbr),spzeros(nbus, nbr)
     )
@@ -193,7 +200,7 @@ function display_preprocess_info(m::PowersenseData)
 	println(" Branches#: ", m.nbr); 
 	println(" Controllable Shunts#: ", m.nbss); 
 	println(" Threads: ", Threads.nthreads()); 
-	println(" ... time_stamp: ", time()-m.start_time, " seconds"); 
+	#println(" ... time_stamp: ", time()-m.start_time, " seconds"); 
 	println("\n");
 end
 

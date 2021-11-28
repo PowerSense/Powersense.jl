@@ -20,6 +20,33 @@ function LpData(slp::AbstractSlpOptimizer)
 		slp.problem.x_U)
 end
 
+function convex_initialization!(slp::AbstractSlpOptimizer)
+    if slp.options.OutputFlag == 1
+        @info "Intializing with Convex Fesible Solution ..."
+    end
+    n = slp.problem.n
+    for i = 1:n
+        MOI.add_constraint(
+            slp.problem.convex_model,
+                    MOI.ScalarAffineFunction(
+                        MOI.ScalarAffineTerm.(
+                            [1.0; 1.0; -1.0],
+                            [MOI.VariableIndex(i); MOI.VariableIndex(n + i); MOI.VariableIndex(2 * n + i)],
+                        ),
+                        0.0,
+                    ),
+                    MOI.EqualTo(slp.x[i]),
+        )
+    end
+    MOI.set(slp.problem.convex_model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    
+    MOI.optimize!(slp.problem.convex_model)
+    for i = 1:n
+        slp.x[i] = MOI.get(slp.problem.convex_model, MOI.VariablePrimal(), MOI.VariableIndex(i))
+    end
+    return slp.x
+end
+
 function sub_optimize!(slp::AbstractSlpOptimizer, Δ = 1000.0)
     if isnothing(slp.optimizer)
         j_row = Vector{Int}(undef, length(slp.problem.j_str))
@@ -32,7 +59,8 @@ function sub_optimize!(slp::AbstractSlpOptimizer, Δ = 1000.0)
             MOI.instantiate(slp.options.external_optimizer),
             LpData(slp),
             j_row,
-            j_col
+            j_col,
+            slp.problem.g_order
         )
         create_model!(slp.optimizer, slp.x, Δ)
     else

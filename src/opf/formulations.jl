@@ -2,7 +2,7 @@ include("type.jl")
 
 function create_opf_model!(data::PowersenseData;
     formulation = PBRAPVmodel,
-    initialize = false,
+    initialize = true,
     FACTS_bShunt = true,
     FACTS_bSeries = true,
     box_constraints = false,
@@ -15,11 +15,11 @@ function create_opf_model!(data::PowersenseData;
     if initialize
         #Adding variables: modeling voltages for different ACOPF formulations 
         if formulation ∈ [PBRAPVmodel, PNPAPVmodel, PNRAPVmodel] 
-            JuMP.@variable(data.model, θ[1:data.nbus], start=data.θ);                       
-            JuMP.@variable(data.model, V[1:data.nbus], start=data.V);
+            JuMP.@variable(data.model, θ[i=1:data.nbus], start=data.θ[i]);                       
+            JuMP.@variable(data.model, V[i=1:data.nbus], start=data.V[i]);
         elseif formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
-            JuMP.@variable(data.model, vi[1:data.nbus], start=data.vr);                       
-            JuMP.@variable(data.model, vr[1:data.nbus], start=data.vr);
+            JuMP.@variable(data.model, vi[i=1:data.nbus], start=data.vi[i]);                       
+            JuMP.@variable(data.model, vr[i=1:data.nbus], start=data.vr[i]);
         end
         if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] 
             JuMP.@variable(data.model, Wd[i=1:data.nbus], start=data.Wd[i]);        
@@ -37,16 +37,16 @@ function create_opf_model!(data::PowersenseData;
 
         #Adding variables: modeling branch flows for different ACOPF formulations
         if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel] 
-            JuMP.@variable(data.model, Pij[1:data.nbr], start=data.Pij);                      
-            JuMP.@variable(data.model, Qij[1:data.nbr], start=data.Pij);
-            JuMP.@variable(data.model, Pji[1:data.nbr], start=data.Pij);                     
-            JuMP.@variable(data.model, Qji[1:data.nbr], start=data.Pij);
+            JuMP.@variable(data.model, Pij[i=1:data.nbr], start=data.Pij[i]);                      
+            JuMP.@variable(data.model, Qij[i=1:data.nbr], start=data.Qij[i]);
+            JuMP.@variable(data.model, Pji[i=1:data.nbr], start=data.Pji[i]);                     
+            JuMP.@variable(data.model, Qji[i=1:data.nbr], start=data.Qji[i]);
         end
         if formulation ∈ [CBRARVmodel, CBRAWVmodel] 
-            JuMP.@variable(data.model, Irij[1:data.nbr], start=data.Irij);                      
-            JuMP.@variable(data.model, Iiij[1:data.nbr], start=data.Iiij);
-            JuMP.@variable(data.model, Irji[1:data.nbr], start=data.Irji);                     
-            JuMP.@variable(data.model, Iiji[1:data.nbr], start=data.Iiji);
+            JuMP.@variable(data.model, Irij[i=1:data.nbr], start=data.Irij[i]);                      
+            JuMP.@variable(data.model, Iiij[i=1:data.nbr], start=data.Iiij[i]);
+            JuMP.@variable(data.model, Irji[i=1:data.nbr], start=data.Irji[i]);                     
+            JuMP.@variable(data.model, Iiji[i=1:data.nbr], start=data.Iiji[i]);
         end
 
         #Adding variables: modeling linearization using piecewise linear interpolation for different ACOPF formulations
@@ -112,13 +112,11 @@ function create_opf_model!(data::PowersenseData;
         JuMP.@variable(data.model, tgh[i = 1:data.ngen, j = 1:data.lps[i]] >= 0);
         JuMP.@objective(data.model, Min, sum(cg));
         for i=1:data.ngen
-		JuMP.@constraint(data.model, cg[i] == sum(data.cgh[i][a] * tgh[i,a] for a = 1:data.lps[i]));
-		JuMP.@constraint(data.model, pg[i] == sum(data.pgh[i][a] * tgh[i,a] for a = 1:data.lps[i]));
-		JuMP.@constraint(data.model, sum(tgh[i,a] for a=1:data.lps[i]) == 1);
-	end
-    elseif formulation ∈ [PBRAPVmodel, PNPAPVmodel, PNRAPVmodel, 
-                            PBRARVmodel, CBRARVmodel, PNRARVmodel, 
-                            PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] 
+            JuMP.@constraint(data.model, cg[i] == sum(data.cgh[i][a] * tgh[i,a] for a = 1:data.lps[i]));
+            JuMP.@constraint(data.model, pg[i] == sum(data.pgh[i][a] * tgh[i,a] for a = 1:data.lps[i]));
+            JuMP.@constraint(data.model, sum(tgh[i,a] for a=1:data.lps[i]) == 1);
+        end
+    elseif obj_type == "quadratic"
         c0 = sum(data.c0);
     	if data.cost_order == 2
     		JuMP.@objective(data.model, Min, data.c2' * (pg .* pg) + (data.c1)' * pg + c0);
@@ -145,9 +143,11 @@ function create_opf_model!(data::PowersenseData;
     #Adding constraints: defining voltages bounds for different ACOPF formulations 
     if formulation ∈ [PBRAPVmodel, PNPAPVmodel, PNRAPVmodel] 
         JuMP.@constraint(data.model, data.Vmin .<= V .<= data.Vmax);   
-    elseif formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel] 
+    elseif formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] 
         JuMP.@constraint(data.model, data.Vmin .* data.Vmin .<= vr .* vr + vi .* vi .<= data.Vmax .* data.Vmax);
-    elseif formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] 
+    end
+
+    if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] 
         JuMP.@constraint(data.model, data.Vmin .* data.Vmin .<= Wd .<= data.Vmax .* data.Vmax);
         JuMP.@constraint(data.model, Wd .== vr .* vr + vi .* vi); 
     end
@@ -156,7 +156,6 @@ function create_opf_model!(data::PowersenseData;
         PNLexpr = JuMP.@NLexpression(data.model, 0.0);            
         QNLexpr = JuMP.@NLexpression(data.model, 0.0);    
         nbal = data.node[string(i)];
-
             
         if formulation ∈ [PBRAPVmodel, PNPAPVmodel, PNRAPVmodel, 
             PBRARVmodel, CBRARVmodel, PNRARVmodel, 
@@ -166,7 +165,6 @@ function create_opf_model!(data::PowersenseData;
                 QNLexpr = JuMP.@NLexpression(data.model, QNLexpr + qg[g]);
             end
         end
-
 
         if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel] 
             for k in nbal["Sij"]        f = data.br[k][1];                 t = data.br[k][2];         
@@ -295,41 +293,64 @@ function create_opf_model!(data::PowersenseData;
     end
 
     if box_constraints
-        add_box_constraints(data, formulation)
+        # add_box_constraints(data, formulation)
+        if formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
+            JuMP.@constraint(data.model, - data.Vmax .<= vi .<= data.Vmax);                       
+            JuMP.@constraint(data.model, - data.Vmax .<= vr .<= data.Vmax); 
+        end
+        if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
+            for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
+                JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wr[k] <= data.Vmax[f] * data.Vmax[t]);
+                JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wi[k] <= data.Vmax[f] * data.Vmax[t]);
+            end
+        end
+        if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel]
+            for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
+                JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Pij[k] <= data.Imax[k] * data.Vmax[f]);
+                JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Pji[k] <= data.Imax[k] * data.Vmax[t]);
+                JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Qij[k] <= data.Imax[k] * data.Vmax[f]);
+                JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Qji[k] <= data.Imax[k] * data.Vmax[t]);
+            end
+        elseif formulation ∈ [CBRARVmodel, CBRAWVmodel]
+            JuMP.@constraint(data.model, - data.Imax .<= Irij .<= data.Imax);
+            JuMP.@constraint(data.model, - data.Imax .<= Iiij .<= data.Imax);
+            JuMP.@constraint(data.model, - data.Imax .<= Irji .<= data.Imax);
+            JuMP.@constraint(data.model, - data.Imax .<= Iiji .<= data.Imax);
+        end
     end
 end
 
-function add_box_constraints(data::PowersenseData, formulation::ACOPF_fromulation; voltage = true, flow = true)
-    if formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] && voltage
-        JuMP.@constraint(data.model, data.Vmin .<= vi .<= data.Vmax);                       
-        JuMP.@constraint(data.model, data.Vmin .<= vr .<= data.Vmax); 
-    end
-    if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] && voltage
-        for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
-            JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wr[k] <= data.Vmax[f] * data.Vmax[t]);
-            JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wi[k] <= data.Vmax[f] * data.Vmax[t]);
-        end
-    end
-    if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel] && flow
-        for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
-            JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Pij[k] <= data.Imax[k] * data.Vmax[f]);
-            JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Pji[k] <= data.Imax[k] * data.Vmax[t]);
-            JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Qij[k] <= data.Imax[k] * data.Vmax[f]);
-            JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Qji[k] <= data.Imax[k] * data.Vmax[t]);
-        end
-    elseif formulation ∈ [CBRARVmodel, CBRAWVmodel] && flow
-        JuMP.@constraint(data.model, - data.Imax .<= Irij .<= data.Imax);
-        JuMP.@constraint(data.model, - data.Imax .<= Iiij .<= data.Imax);
-        JuMP.@constraint(data.model, - data.Imax .<= Irji .<= data.Imax);
-        JuMP.@constraint(data.model, - data.Imax .<= Iiji .<= data.Imax);
-    end
-end
+# function add_box_constraints(data::PowersenseData, formulation::ACOPF_fromulation; voltage = true, flow = true)
+#     if formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] && voltage
+#         JuMP.@constraint(data.model, data.Vmin .<= vi .<= data.Vmax);                       
+#         JuMP.@constraint(data.model, data.Vmin .<= vr .<= data.Vmax); 
+#     end
+#     if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] && voltage
+#         for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
+#             JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wr[k] <= data.Vmax[f] * data.Vmax[t]);
+#             JuMP.@constraint(data.model, - data.Vmax[f] * data.Vmax[t] <= Wi[k] <= data.Vmax[f] * data.Vmax[t]);
+#         end
+#     end
+#     if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel] && flow
+#         for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
+#             JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Pij[k] <= data.Imax[k] * data.Vmax[f]);
+#             JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Pji[k] <= data.Imax[k] * data.Vmax[t]);
+#             JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[f] <= Qij[k] <= data.Imax[k] * data.Vmax[f]);
+#             JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Qji[k] <= data.Imax[k] * data.Vmax[t]);
+#         end
+#     elseif formulation ∈ [CBRARVmodel, CBRAWVmodel] && flow
+#         JuMP.@constraint(data.model, - data.Imax .<= Irij .<= data.Imax);
+#         JuMP.@constraint(data.model, - data.Imax .<= Iiij .<= data.Imax);
+#         JuMP.@constraint(data.model, - data.Imax .<= Irji .<= data.Imax);
+#         JuMP.@constraint(data.model, - data.Imax .<= Iiji .<= data.Imax);
+#     end
+# end
 
 function run_opf!(data::PowersenseData;
     formulation = PBRAPVmodel,
     create_model = true,
     solver = Powersense.Optimizer,
-    initialize = false,
+    initialize = true,
     FACTS_bShunt = true,
     FACTS_bSeries = false,
     box_constraints = false,

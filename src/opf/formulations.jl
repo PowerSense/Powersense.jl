@@ -2,7 +2,7 @@ include("type.jl")
 
 function create_opf_model!(data::PowersenseData;
     formulation = PBRAPVmodel,
-    initialize = false,
+    initialize = true,
     FACTS_bShunt = true,
     FACTS_bSeries = true,
     box_constraints = false,
@@ -15,11 +15,11 @@ function create_opf_model!(data::PowersenseData;
     if initialize
         #Adding variables: modeling voltages for different ACOPF formulations 
         if formulation ∈ [PBRAPVmodel, PNPAPVmodel, PNRAPVmodel] 
-            JuMP.@variable(data.model, θ[1:data.nbus], start=data.θ);                       
-            JuMP.@variable(data.model, V[1:data.nbus], start=data.V);
+            JuMP.@variable(data.model, θ[i=1:data.nbus], start=data.θ[i]);                       
+            JuMP.@variable(data.model, V[i=1:data.nbus], start=data.V[i]);
         elseif formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
-            JuMP.@variable(data.model, vi[1:data.nbus], start=data.vi);                       
-            JuMP.@variable(data.model, vr[1:data.nbus], start=data.vr);
+            JuMP.@variable(data.model, vi[i=1:data.nbus], start=data.vi[i]);                       
+            JuMP.@variable(data.model, vr[i=1:data.nbus], start=data.vr[i]);
         end
         if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel] 
             JuMP.@variable(data.model, Wd[i=1:data.nbus], start=data.Wd[i]);        
@@ -37,16 +37,16 @@ function create_opf_model!(data::PowersenseData;
 
         #Adding variables: modeling branch flows for different ACOPF formulations
         if formulation ∈ [PBRAPVmodel, PBRARVmodel, PBRAWVmodel] 
-            JuMP.@variable(data.model, Pij[1:data.nbr], start=data.Pij);                      
-            JuMP.@variable(data.model, Qij[1:data.nbr], start=data.Qij);
-            JuMP.@variable(data.model, Pji[1:data.nbr], start=data.Pji);                     
-            JuMP.@variable(data.model, Qji[1:data.nbr], start=data.Qji);
+            JuMP.@variable(data.model, Pij[i=1:data.nbr], start=data.Pij[i]);                      
+            JuMP.@variable(data.model, Qij[i=1:data.nbr], start=data.Qij[i]);
+            JuMP.@variable(data.model, Pji[i=1:data.nbr], start=data.Pji[i]);                     
+            JuMP.@variable(data.model, Qji[i=1:data.nbr], start=data.Qji[i]);
         end
         if formulation ∈ [CBRARVmodel, CBRAWVmodel] 
-            JuMP.@variable(data.model, Irij[1:data.nbr], start=data.Irij);                      
-            JuMP.@variable(data.model, Iiij[1:data.nbr], start=data.Iiij);
-            JuMP.@variable(data.model, Irji[1:data.nbr], start=data.Irji);                     
-            JuMP.@variable(data.model, Iiji[1:data.nbr], start=data.Iiji);
+            JuMP.@variable(data.model, Irij[i=1:data.nbr], start=data.Irij[i]);                      
+            JuMP.@variable(data.model, Iiij[i=1:data.nbr], start=data.Iiij[i]);
+            JuMP.@variable(data.model, Irji[i=1:data.nbr], start=data.Irji[i]);                     
+            JuMP.@variable(data.model, Iiji[i=1:data.nbr], start=data.Iiji[i]);
         end
 
         #Adding variables: modeling linearization using piecewise linear interpolation for different ACOPF formulations
@@ -246,57 +246,57 @@ function create_opf_model!(data::PowersenseData;
         JuMP.@NLconstraint(data.model, QNLexpr == data.Qd[i]);
     end
     
-    # for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
-    #     if formulation == PBRAPVmodel
-    #         JuMP.@NLconstraint(data.model, Pij[k] == - data.gf[k] * V[f]^2 - (data.Gf[k] * cos(θ[f] - θ[t]) + data.Bf[k] * sin(θ[f] - θ[t])) * V[f] * V[t]);
-    #         JuMP.@NLconstraint(data.model, Pji[k] == - data.gt[k] * V[t]^2 - (data.Gt[k] * cos(θ[t] - θ[f]) + data.Bt[k] * sin(θ[t] - θ[f])) * V[f] * V[t]);
-    #         JuMP.@NLconstraint(data.model, Qij[k] ==   data.bf[k] * V[f]^2 + (data.Bf[k] * cos(θ[f] - θ[t]) - data.Gf[k] * sin(θ[f] - θ[t])) * V[f] * V[t]); 
-    #         JuMP.@NLconstraint(data.model, Qji[k] ==   data.bt[k] * V[t]^2 + (data.Bt[k] * cos(θ[t] - θ[f]) - data.Gt[k] * sin(θ[t] - θ[f])) * V[f] * V[t]); 
-    #         JuMP.@NLconstraint(data.model, Pij[k]^2 + Qij[k]^2 <= data.Imax[k]^2 * V[f]^2);
-    #         JuMP.@NLconstraint(data.model, Pji[k]^2 + Qji[k]^2 <= data.Imax[k]^2 * V[t]^2);
-    #     elseif formulation == PBRARVmodel
-    #         JuMP.@NLconstraint(data.model, Pij[k] == - data.gf[k] * (vr[f]^2+vi[f]^2) - data.Gf[k] * (vr[f]*vr[t]+vi[f]*vi[t]) + data.Bf[k] * (vr[f]*vi[t]-vi[f]*vr[t]));
-    #         JuMP.@NLconstraint(data.model, Pji[k] == - data.gt[k] * (vr[t]^2+vi[t]^2) - data.Gt[k] * (vr[t]*vr[f]+vi[t]*vi[f]) + data.Bt[k] * (vr[t]*vi[f]-vi[t]*vr[f]));
-    #         JuMP.@NLconstraint(data.model, Qij[k] == + data.bf[k] * (vr[f]^2+vi[f]^2) + data.Bf[k] * (vr[f]*vr[t]+vi[f]*vi[t]) + data.Gf[k] * (vr[f]*vi[t]-vi[f]*vr[t])); 
-    #         JuMP.@NLconstraint(data.model, Qji[k] == + data.bt[k] * (vr[t]^2+vi[t]^2) + data.Bt[k] * (vr[t]*vr[f]+vi[t]*vi[f]) + data.Gt[k] * (vr[t]*vi[f]-vi[t]*vr[f])); 
-    #         JuMP.@NLconstraint(data.model, Pij[k]^2 + Qij[k]^2 <= data.Imax[k]^2 * (vr[f]^2+vi[f]^2));
-    #         JuMP.@NLconstraint(data.model, Pji[k]^2 + Qji[k]^2 <= data.Imax[k]^2 * (vr[t]^2+vi[t]^2));
-    #     elseif formulation == CBRARVmodel
-    #         JuMP.@constraint(data.model, Irij[k] == - data.gf[k] * vr[f] + data.bf[k] * vi[f] - data.Gf[k] * vr[t] + data.Bf[k] * vi[t]);
-    #         JuMP.@constraint(data.model, Irji[k] == - data.gt[k] * vr[t] + data.bt[k] * vi[t] - data.Gt[k] * vr[f] + data.Bt[k] * vi[f]);
-    #         JuMP.@constraint(data.model, Iiij[k] == - data.gf[k] * vi[f] - data.bf[k] * vr[f] - data.Gf[k] * vi[t] - data.Bf[k] * vr[t]);
-    #         JuMP.@constraint(data.model, Iiji[k] == - data.gt[k] * vi[t] - data.bt[k] * vr[t] - data.Gt[k] * vi[f] - data.Bt[k] * vr[f]);
-    #         JuMP.@NLconstraint(data.model, Irij[k]^2 + Iiij[k]^2 <= data.Imax[k]^2);
-    #         JuMP.@NLconstraint(data.model, Irji[k]^2 + Iiji[k]^2 <= data.Imax[k]^2); 
-    #     elseif formulation == CBRAWVmodel
-    #         JuMP.@constraint(data.model, Irij[k] == - data.gf[k] * vr[f] + data.bf[k] * vi[f] - data.Gf[k] * vr[t] + data.Bf[k] * vi[t]);
-    #         JuMP.@constraint(data.model, Irji[k] == - data.gt[k] * vr[t] + data.bt[k] * vi[t] - data.Gt[k] * vr[f] + data.Bt[k] * vi[f]);
-    #         JuMP.@constraint(data.model, Iiij[k] == - data.gf[k] * vi[f] - data.bf[k] * vr[f] - data.Gf[k] * vi[t] - data.Bf[k] * vr[t]);
-    #         JuMP.@constraint(data.model, Iiji[k] == - data.gt[k] * vi[t] - data.bt[k] * vr[t] - data.Gt[k] * vi[f] - data.Bt[k] * vr[f]);
-    #         JuMP.@NLconstraint(data.model, Irij[k]^2 + Iiij[k]^2 <= data.Imax[k]^2);
-    #         JuMP.@NLconstraint(data.model, Irji[k]^2 + Iiji[k]^2 <= data.Imax[k]^2); 
-    #     elseif formulation ∈ [PNPAPVmodel, PNRAPVmodel]
-    #         y¹ = abs2(data.gf[k] + (data.bf[k])im);       y² = abs2(data.Gf[k] + (data.Bf[k])im);       y³ = 2 * abs(data.gf[k] + (data.bf[k])im) * abs(data.Gf[k] + (data.Bf[k])im);
-    #         θ¹ = angle(data.gf[k] + (data.bf[k])im);      θ² = angle(data.Gf[k] + (data.Bf[k])im); 
-    #         JuMP.@NLconstraint(data.model, y¹ * V[f]^2 + y² * V[t]^2 + y³ * V[f] * V[t] * cos(θ[f] - θ[t] + θ¹ - θ²) <= data.Imax[k]^2);
-    #         y¹ = abs2(data.gt[k] + (data.bt[k])im);       y² = abs2(data.Gt[k] + (data.Bt[k])im);       y³ = 2 * abs(data.gt[k] + (data.bt[k])im) * abs(data.Gt[k] + (data.Bt[k])im);
-    #         θ¹ = angle(data.gt[k] + (data.bt[k])im);      θ² = angle(data.Gt[k] + (data.Bt[k])im); 
-    #         JuMP.@NLconstraint(data.model, y¹ * V[t]^2 + y² * V[f]^2 + y³ * V[t] * V[f] * cos(θ[t] - θ[f] + θ¹ - θ²) <= data.Imax[k]^2);
-    #     elseif formulation == PNRARVmodel
-    #         y = abs2(data.gf[k] + (data.bf[k])im);                    Y = abs2(data.Gf[k] + (data.Bf[k])im);       
-    #         y¹ = 2 * (data.gf[k] * data.Gf[k] + data.bf[k] * data.Bf[k]);   y² = 2 * (data.bf[k] * data.Gf[k] - data.gf[k] * data.Bf[k]); 
-    #         JuMP.@NLconstraint(data.model, y¹ * (vr[f]*vr[t]+vi[f]*vi[t]) + y² * (vr[f]*vi[t]-vi[f]*vr[t]) + y * (vr[f]^2+vi[f]^2) + Y * (vr[t]^2+vi[t]^2) <= data.Imax[k]^2);
-    #         y = abs2(data.gt[k] + (data.bt[k])im);                    Y = abs2(data.Gt[k] + (data.Bt[k])im);       
-    #         y¹ = 2 * (data.gt[k] * data.Gt[k] + data.bt[k] * data.Bt[k]);   y² = 2 * (data.bt[k] * data.Gt[k] - data.gt[k] * data.Bt[k]); 
-    #         JuMP.@NLconstraint(data.model, y¹ * (vr[t]*vr[f]+vi[t]*vi[f]) + y² * (vr[t]*vi[f]-vi[t]*vr[f]) + y * (vr[t]^2+vi[t]^2) + Y * (vr[f]^2+vi[f]^2) <= data.Imax[k]^2);   
-    #     end
-    # end
+    for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
+        if formulation == PBRAPVmodel
+            JuMP.@NLconstraint(data.model, Pij[k] == - data.gf[k] * V[f]^2 - (data.Gf[k] * cos(θ[f] - θ[t]) + data.Bf[k] * sin(θ[f] - θ[t])) * V[f] * V[t]);
+            JuMP.@NLconstraint(data.model, Pji[k] == - data.gt[k] * V[t]^2 - (data.Gt[k] * cos(θ[t] - θ[f]) + data.Bt[k] * sin(θ[t] - θ[f])) * V[f] * V[t]);
+            JuMP.@NLconstraint(data.model, Qij[k] ==   data.bf[k] * V[f]^2 + (data.Bf[k] * cos(θ[f] - θ[t]) - data.Gf[k] * sin(θ[f] - θ[t])) * V[f] * V[t]); 
+            JuMP.@NLconstraint(data.model, Qji[k] ==   data.bt[k] * V[t]^2 + (data.Bt[k] * cos(θ[t] - θ[f]) - data.Gt[k] * sin(θ[t] - θ[f])) * V[f] * V[t]); 
+            JuMP.@NLconstraint(data.model, Pij[k]^2 + Qij[k]^2 <= data.Imax[k]^2 * V[f]^2);
+            JuMP.@NLconstraint(data.model, Pji[k]^2 + Qji[k]^2 <= data.Imax[k]^2 * V[t]^2);
+        elseif formulation == PBRARVmodel
+            JuMP.@NLconstraint(data.model, Pij[k] == - data.gf[k] * (vr[f]^2+vi[f]^2) - data.Gf[k] * (vr[f]*vr[t]+vi[f]*vi[t]) + data.Bf[k] * (vr[f]*vi[t]-vi[f]*vr[t]));
+            JuMP.@NLconstraint(data.model, Pji[k] == - data.gt[k] * (vr[t]^2+vi[t]^2) - data.Gt[k] * (vr[t]*vr[f]+vi[t]*vi[f]) + data.Bt[k] * (vr[t]*vi[f]-vi[t]*vr[f]));
+            JuMP.@NLconstraint(data.model, Qij[k] == + data.bf[k] * (vr[f]^2+vi[f]^2) + data.Bf[k] * (vr[f]*vr[t]+vi[f]*vi[t]) + data.Gf[k] * (vr[f]*vi[t]-vi[f]*vr[t])); 
+            JuMP.@NLconstraint(data.model, Qji[k] == + data.bt[k] * (vr[t]^2+vi[t]^2) + data.Bt[k] * (vr[t]*vr[f]+vi[t]*vi[f]) + data.Gt[k] * (vr[t]*vi[f]-vi[t]*vr[f])); 
+            JuMP.@NLconstraint(data.model, Pij[k]^2 + Qij[k]^2 <= data.Imax[k]^2 * (vr[f]^2+vi[f]^2));
+            JuMP.@NLconstraint(data.model, Pji[k]^2 + Qji[k]^2 <= data.Imax[k]^2 * (vr[t]^2+vi[t]^2));
+        elseif formulation == CBRARVmodel
+            JuMP.@constraint(data.model, Irij[k] == - data.gf[k] * vr[f] + data.bf[k] * vi[f] - data.Gf[k] * vr[t] + data.Bf[k] * vi[t]);
+            JuMP.@constraint(data.model, Irji[k] == - data.gt[k] * vr[t] + data.bt[k] * vi[t] - data.Gt[k] * vr[f] + data.Bt[k] * vi[f]);
+            JuMP.@constraint(data.model, Iiij[k] == - data.gf[k] * vi[f] - data.bf[k] * vr[f] - data.Gf[k] * vi[t] - data.Bf[k] * vr[t]);
+            JuMP.@constraint(data.model, Iiji[k] == - data.gt[k] * vi[t] - data.bt[k] * vr[t] - data.Gt[k] * vi[f] - data.Bt[k] * vr[f]);
+            JuMP.@NLconstraint(data.model, Irij[k]^2 + Iiij[k]^2 <= data.Imax[k]^2);
+            JuMP.@NLconstraint(data.model, Irji[k]^2 + Iiji[k]^2 <= data.Imax[k]^2); 
+        elseif formulation == CBRAWVmodel
+            JuMP.@constraint(data.model, Irij[k] == - data.gf[k] * vr[f] + data.bf[k] * vi[f] - data.Gf[k] * vr[t] + data.Bf[k] * vi[t]);
+            JuMP.@constraint(data.model, Irji[k] == - data.gt[k] * vr[t] + data.bt[k] * vi[t] - data.Gt[k] * vr[f] + data.Bt[k] * vi[f]);
+            JuMP.@constraint(data.model, Iiij[k] == - data.gf[k] * vi[f] - data.bf[k] * vr[f] - data.Gf[k] * vi[t] - data.Bf[k] * vr[t]);
+            JuMP.@constraint(data.model, Iiji[k] == - data.gt[k] * vi[t] - data.bt[k] * vr[t] - data.Gt[k] * vi[f] - data.Bt[k] * vr[f]);
+            JuMP.@NLconstraint(data.model, Irij[k]^2 + Iiij[k]^2 <= data.Imax[k]^2);
+            JuMP.@NLconstraint(data.model, Irji[k]^2 + Iiji[k]^2 <= data.Imax[k]^2); 
+        elseif formulation ∈ [PNPAPVmodel, PNRAPVmodel]
+            y¹ = abs2(data.gf[k] + (data.bf[k])im);       y² = abs2(data.Gf[k] + (data.Bf[k])im);       y³ = 2 * abs(data.gf[k] + (data.bf[k])im) * abs(data.Gf[k] + (data.Bf[k])im);
+            θ¹ = angle(data.gf[k] + (data.bf[k])im);      θ² = angle(data.Gf[k] + (data.Bf[k])im); 
+            JuMP.@NLconstraint(data.model, y¹ * V[f]^2 + y² * V[t]^2 + y³ * V[f] * V[t] * cos(θ[f] - θ[t] + θ¹ - θ²) <= data.Imax[k]^2);
+            y¹ = abs2(data.gt[k] + (data.bt[k])im);       y² = abs2(data.Gt[k] + (data.Bt[k])im);       y³ = 2 * abs(data.gt[k] + (data.bt[k])im) * abs(data.Gt[k] + (data.Bt[k])im);
+            θ¹ = angle(data.gt[k] + (data.bt[k])im);      θ² = angle(data.Gt[k] + (data.Bt[k])im); 
+            JuMP.@NLconstraint(data.model, y¹ * V[t]^2 + y² * V[f]^2 + y³ * V[t] * V[f] * cos(θ[t] - θ[f] + θ¹ - θ²) <= data.Imax[k]^2);
+        elseif formulation == PNRARVmodel
+            y = abs2(data.gf[k] + (data.bf[k])im);                    Y = abs2(data.Gf[k] + (data.Bf[k])im);       
+            y¹ = 2 * (data.gf[k] * data.Gf[k] + data.bf[k] * data.Bf[k]);   y² = 2 * (data.bf[k] * data.Gf[k] - data.gf[k] * data.Bf[k]); 
+            JuMP.@NLconstraint(data.model, y¹ * (vr[f]*vr[t]+vi[f]*vi[t]) + y² * (vr[f]*vi[t]-vi[f]*vr[t]) + y * (vr[f]^2+vi[f]^2) + Y * (vr[t]^2+vi[t]^2) <= data.Imax[k]^2);
+            y = abs2(data.gt[k] + (data.bt[k])im);                    Y = abs2(data.Gt[k] + (data.Bt[k])im);       
+            y¹ = 2 * (data.gt[k] * data.Gt[k] + data.bt[k] * data.Bt[k]);   y² = 2 * (data.bt[k] * data.Gt[k] - data.gt[k] * data.Bt[k]); 
+            JuMP.@NLconstraint(data.model, y¹ * (vr[t]*vr[f]+vi[t]*vi[f]) + y² * (vr[t]*vi[f]-vi[t]*vr[f]) + y * (vr[t]^2+vi[t]^2) + Y * (vr[f]^2+vi[f]^2) <= data.Imax[k]^2);   
+        end
+    end
 
     if box_constraints
         # add_box_constraints(data, formulation)
         if formulation ∈ [PBRARVmodel, CBRARVmodel, PNRARVmodel, PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
-            JuMP.@constraint(data.model, data.Vmin .<= vi .<= data.Vmax);                       
-            JuMP.@constraint(data.model, data.Vmin .<= vr .<= data.Vmax); 
+            JuMP.@constraint(data.model, - data.Vmax .<= vi .<= data.Vmax);                       
+            JuMP.@constraint(data.model, - data.Vmax .<= vr .<= data.Vmax); 
         end
         if formulation ∈ [PBRAWVmodel, CBRAWVmodel, PNRAWVmodel]
             for k=1:data.nbr                   f = data.br[k][1];                         t = data.br[k][2];
@@ -350,7 +350,7 @@ function run_opf!(data::PowersenseData;
     formulation = PBRAPVmodel,
     create_model = true,
     solver = Powersense.Optimizer,
-    initialize = false,
+    initialize = true,
     FACTS_bShunt = true,
     FACTS_bSeries = false,
     box_constraints = false,

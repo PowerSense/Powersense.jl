@@ -113,7 +113,7 @@ function run!(slp::SlpLS)
 
     if slp.options.ConvexFeasibleInitialization > 0
         slp.x = try 
-                    convex_optimize!(slp)
+                    convex_initialization!(slp)
                  catch;
                     @info "Convex Feasible Initilization Failed"
                     slp.x

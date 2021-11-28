@@ -14,6 +14,7 @@ mutable struct Model{T,Tv,Tt}
     mult_x_U::Tv # lagrange multipliers on upper bounds
     obj_val::T  # Final objective
     status::Int  # Final status
+    g_order::Vector{Int}
 
     # Callbacks
     eval_f::Function
@@ -46,7 +47,7 @@ mutable struct Model{T,Tv,Tt}
         eval_jac_g::Function,
         eval_h::Union{Function,Nothing},
         parameters::Parameters,
-        convex_model
+        g_order, convex_model
     ) where {T, Tv<:AbstractArray{T}, Tt<:AbstractArray{Tuple{Int64,Int64}}} = new{T,Tv,Tt}(
         n, m,
         zeros(n), x_L, x_U,
@@ -55,6 +56,7 @@ mutable struct Model{T,Tv,Tt}
         zeros(m), zeros(n), zeros(n),
         0.0,
         -5,
+        g_order,
         eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h, 
         nothing, :Min, convex_model,
         parameters,

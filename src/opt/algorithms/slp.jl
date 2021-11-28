@@ -20,51 +20,30 @@ function LpData(slp::AbstractSlpOptimizer)
 		slp.problem.x_U)
 end
 
-function convex_optimize!(slp::AbstractSlpOptimizer)
+function convex_initialization!(slp::AbstractSlpOptimizer)
     if slp.options.OutputFlag == 1
         @info "Intializing with Convex Fesible Solution ..."
     end
-    model = MOI.instantiate(slp.options.external_optimizer)
-    # @show slp.x
-    MOI.copy_to(model, slp.problem.convex_model)
     n = slp.problem.n
-    @show n
-    m = slp.problem.m
-    @show m
-    u = MOI.add_variables(model, n)
-    v = MOI.add_variables(model, n)
     for i = 1:n
-        MOI.modify(
-            model,
-            MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
-            MOI.ScalarCoefficientChange(MOI.VariableIndex(n + i), 1.0),
-        )
-        MOI.add_constraint(model, MOI.SingleVariable(MOI.VariableIndex(n + i)), MOI.GreaterThan(0.0))
-        MOI.modify(
-            model,
-            MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
-            MOI.ScalarCoefficientChange(MOI.VariableIndex(2 * n + i), 1.0),
-        )
-        MOI.add_constraint(model, MOI.SingleVariable(MOI.VariableIndex(2 * n + i)), MOI.GreaterThan(0.0))
         MOI.add_constraint(
-                    model,
+            slp.problem.convex_model,
                     MOI.ScalarAffineFunction(
                         MOI.ScalarAffineTerm.(
-                            [-1.0; 1.0; -1.0],
+                            [1.0; 1.0; -1.0],
                             [MOI.VariableIndex(i); MOI.VariableIndex(n + i); MOI.VariableIndex(2 * n + i)],
                         ),
-                        slp.x[i],
+                        0.0,
                     ),
-                    MOI.EqualTo(0.0),
+                    MOI.EqualTo(slp.x[i]),
         )
     end
-    MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
+    MOI.set(slp.problem.convex_model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
     
-    MOI.optimize!(model)
+    MOI.optimize!(slp.problem.convex_model)
     for i = 1:n
-        slp.x[i] = MOI.get(model, MOI.VariablePrimal(), MOI.VariableIndex(i))
+        slp.x[i] = MOI.get(slp.problem.convex_model, MOI.VariablePrimal(), MOI.VariableIndex(i))
     end
-    # @show slp.x
     return slp.x
 end
 
@@ -80,7 +59,8 @@ function sub_optimize!(slp::AbstractSlpOptimizer, Δ = 1000.0)
             MOI.instantiate(slp.options.external_optimizer),
             LpData(slp),
             j_row,
-            j_col
+            j_col,
+            slp.problem.g_order
         )
         create_model!(slp.optimizer, slp.x, Δ)
     else

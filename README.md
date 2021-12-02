@@ -21,7 +21,6 @@ Pkg.add("Powersense")
 ```
 
 
-
 ## NLP Solver Example
 
 Consider the following quadratic optimization problem

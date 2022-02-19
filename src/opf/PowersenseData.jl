@@ -120,8 +120,8 @@ function create_PowersenseData(path)
     m.slack = network["slack"];
     m.source_type=network["source_type"];
 
-    m.i2j_set = 1:nbr
-    m.j2i_set = 1:nbr
+    m.i2j_set = 1:m.nbr
+    m.j2i_set = 1:m.nbr
     
     m.cost_order = (m.source_type == "matpower") ? network["gen_cost_order"] : 0;
     "Assigning generator parameters"

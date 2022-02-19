@@ -1,3 +1,4 @@
+# using Gurobi
 abstract type AbstractSubOptimizer end
 
 struct QpData{T,Tv<:AbstractArray{T},Tm<:AbstractMatrix{T}}
@@ -663,7 +664,8 @@ function sub_optimize!(
     mult_x_U = Tv(undef, n)
     mult_x_L = Tv(undef, n)
 
-    if status == MOI.OPTIMAL
+    # condition = 1.0e6
+    if status == MOI.OPTIMAL || status == MOI.ALMOST_OPTIMAL || status == MOI.LOCALLY_SOLVED
         # @show MOI.get(qp.model, MOI.ObjectiveValue())
         Xsol .= MOI.get(qp.model, MOI.VariablePrimal(), qp.x)
         for (i, slacks) in qp.slack_vars
@@ -693,6 +695,7 @@ function sub_optimize!(
                 mult_x_L[j] = 0.0
             end
         end
+        # condition = MOI.get(qp.model, Gurobi.ModelAttribute("KappaExact"));
     elseif status == MOI.DUAL_INFEASIBLE
         @error "Trust region must be employed."
     elseif status == MOI.INFEASIBLE
@@ -703,6 +706,13 @@ function sub_optimize!(
     else
         @error "Unexpected status: $(status)"
     end
+
+    
+
+    # files = "condition.txt"
+    # open(files, "a") do io
+    #     write(io, string(condition,","));
+    # end
     # @show -Inf in Xsol
     # @show -Inf in lambda
     # @show -Inf in mult_x_U

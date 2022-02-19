@@ -31,6 +31,9 @@ mutable struct PowersenseData
     bt::Vector{Float64}
     
 
+    Wd::Vector{Float64}
+    Wr::Vector{Float64}
+    Wi::Vector{Float64}
     vr::Vector{Float64}
     vi::Vector{Float64}
     br::Vector{Tuple{Int64,Int64}}
@@ -71,11 +74,29 @@ mutable struct PowersenseData
     Aji::SparseMatrixCSC{Float64,Int64}
     
     model
+    _pg
+    _qg
+    _bss
+    _V
+    _θ
+    _Wd
+    _Wr
+    _Wi
+    _vr
+    _vi
+    _Iiij
+    _Iiji
+    _Irij
+    _Irji
+    _Pij
+    _Qij
+    _Pji
+    _Qji
 
     PowersenseData(nbus::Int,ngen::Int,nbr::Int,nbss::Int) = new(
         nbus,ngen,nbr,nbss,zeros(nbus),zeros(nbus),zeros(ngen),zeros(ngen),zeros(ngen),zeros(ngen),zeros(nbss),zeros(nbss),zeros(nbr),
         zeros(ngen),zeros(ngen),zeros(nbss),ones(nbus),zeros(nbus), zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
-        ones(nbus),zeros(nbus),Array{Tuple{Int64,Int64},1}(),Dict(),zeros(nbus),zeros(nbus),zeros(nbus),zeros(nbus),        
+        ones(nbus), ones(nbr), zeros(nbr), ones(nbus),zeros(nbus),Array{Tuple{Int64,Int64},1}(),Dict(),zeros(nbus),zeros(nbus),zeros(nbus),zeros(nbus),        
         zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
         zeros(nbus),zeros(nbus),zeros(ngen),Vector{Vector{Float64}}(),Vector{Vector{Float64}}(),
         0.0,zeros(ngen),zeros(ngen),zeros(ngen),0, " ",

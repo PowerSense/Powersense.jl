@@ -110,24 +110,12 @@ function compute_phi(slp::AbstractSlpOptimizer, x::Tv, α::T, p::Tv) where {T,Tv
     xp = x + α * p
     E = ifelse(α == 0.0, slp.E, slp.problem.eval_g(xp, zeros(slp.problem.m)))
     if slp.feasibility_restoration
-        p_slack = slp.p_slack
-        ϕ = slp.prim_infeas
-        for (i, v) in p_slack
-            ϕ += α * sum(v)
-        end
         for i = 1:slp.problem.m
-            viol = maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
-            lhs = E[i] - viol
-            if slp.problem.g_L[i] > -Inf && slp.problem.g_U[i] < Inf
-                lhs += α * (p_slack[i][1] - p_slack[i][2])
-            elseif slp.problem.g_L[i] > -Inf
-                lhs += α * p_slack[i][1]
-            elseif slp.problem.g_U[i] < Inf
-                lhs -= α * p_slack[i][1]
+            if E[i] > slp.problem.g_U[i]
+                ϕ += (E[i] - slp.problem.g_U[i])
+            elseif E[i] < slp.problem.g_L[i]
+                ϕ += (slp.problem.g_L[i] - E[i])
             end
-            ϕ +=
-                slp.ν[i] *
-                maximum([0.0, lhs - slp.problem.g_U[i], slp.problem.g_L[i] - lhs])
         end
     else
         ϕ = slp.problem.eval_f(xp)
@@ -154,11 +142,11 @@ function compute_derivative(slp::AbstractSlpOptimizer)
             D += sum(v)
         end
         for i = 1:slp.problem.m
-            viol = maximum([0.0, slp.E[i] - slp.problem.g_U[i], slp.problem.g_L[i] - slp.E[i]])
-            lhs = slp.E[i] - viol
-            D -=
-                slp.ν[i] *
-                maximum([0.0, lhs - slp.problem.g_U[i], slp.problem.g_L[i] - lhs])
+            if slp.E[i] > slp.problem.g_U[i]
+                D -= (slp.E[i] - slp.problem.g_U[i])
+            elseif slp.E[i] < slp.problem.g_L[i]
+                D -= (slp.problem.g_L[i] - slp.E[i])
+            end
         end
     else
         D = slp.df' * slp.p
@@ -215,6 +203,14 @@ function eval_functions!(slp::AbstractSlpOptimizer)
     slp.problem.eval_grad_f(slp.x, slp.df)
     slp.problem.eval_g(slp.x, slp.E)
     slp.problem.eval_jac_g(slp.x, :eval, [], [], slp.dE)
+end
+
+
+function evaluate_total_slack!(slp::AbstractSlpOptimizer)
+    slp.slack_sum = 0.0
+    for (_, v) in slp.p_slack
+        slp.slack_sum += sum(v)
+    end
 end
 
 compute_jacobian_matrix(slp::AbstractSlpOptimizer) = compute_jacobian_matrix(slp.problem.m, slp.problem.n, slp.problem.j_str, slp.dE)

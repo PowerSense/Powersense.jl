@@ -15,6 +15,7 @@ mutable struct Model{T,Tv,Tt}
     obj_val::T  # Final objective
     status::Int  # Final status
     g_order::Vector{Int}
+    iter::Int
 
     # Callbacks
     eval_f::Function
@@ -57,6 +58,7 @@ mutable struct Model{T,Tv,Tt}
         0.0,
         -5,
         g_order,
+        0,
         eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h, 
         nothing, :Min, convex_model,
         parameters,

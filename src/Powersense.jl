@@ -9,7 +9,7 @@ import MathOptInterface, JuMP, PowerModels
 const MOI = MathOptInterface
 const MOIU = MathOptInterface.Utilities
 
-export create_PowersenseData, display_preprocess_info, create_opf_model!, run_opf!
+export create_PowersenseData, display_preprocess_info, create_opf_model!, run_opf!, run_dcopf!, run_dcopf, run_opf
 
 include("opt/status.jl")
 include("opt/parameters.jl")

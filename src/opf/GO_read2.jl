@@ -1,8 +1,8 @@
 function process_data(path)
     if typeof(path) != String
     	(network, bus_shift)=process_raw(true, path[1]);
-	network=process_rop(true, path[2], network, bus_shift);
-	return network
+        network=process_rop(true, path[2], network, bus_shift);
+        return network
     elseif typeof(path) == String
     	data = PowerModels.parse_file(path);
     	(network, bus_shift)=process_raw(data);

@@ -26,7 +26,7 @@ Base.@kwdef mutable struct Parameters
     rho::Float64 = 0.8              # directional derivative parameter defined in (0,1)
     eta::Float64 = 0.4              # descent step test parameter defined in (0,0.5)
     tau::Float64 = 0.9              # line search step decrease parameter defined in (0,1)
-    min_alpha::Float64 = 1.e-6      # minimum step size
+    min_alpha::Float64 = 1.e-8      # minimum step size
     tr_size::Float64 = 0.4          # trust region size
 end
 

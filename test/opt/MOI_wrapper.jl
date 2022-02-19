@@ -9,7 +9,7 @@ MOI.set(optimizer, MOI.RawParameter("external_optimizer"), GLPK.Optimizer)
 MOI.set(optimizer, MOI.RawParameter("max_iter"), 3000)
 MOI.set(optimizer, MOI.RawParameter("tol_residual"), 1.e-2)
 MOI.set(optimizer, MOI.RawParameter("tol_infeas"), 1.e-2)
-MOI.set(optimizer, MOI.RawParameter("OutputFlag"), 0)
+MOI.set(optimizer, MOI.RawParameter("OutputFlag"), 1)
 
 const config_no_duals = MOIT.TestConfig(atol=1e-2, rtol=1e-2, duals=false, optimal_status=MOI.LOCALLY_SOLVED)
 

@@ -93,6 +93,9 @@ mutable struct PowersenseData
     _Pji
     _Qji
 
+    i2j_set
+    j2i_set
+
     PowersenseData(nbus::Int,ngen::Int,nbr::Int,nbss::Int) = new(
         nbus,ngen,nbr,nbss,zeros(nbus),zeros(nbus),zeros(ngen),zeros(ngen),zeros(ngen),zeros(ngen),zeros(nbss),zeros(nbss),zeros(nbr),
         zeros(ngen),zeros(ngen),zeros(nbss),ones(nbus),zeros(nbus), zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),zeros(nbr),
@@ -116,6 +119,9 @@ function create_PowersenseData(path)
     end
     m.slack = network["slack"];
     m.source_type=network["source_type"];
+
+    m.i2j_set = 1:m.nbr
+    m.j2i_set = 1:m.nbr
     
     m.cost_order = (m.source_type == "matpower") ? network["gen_cost_order"] : 0;
     "Assigning generator parameters"
@@ -126,7 +132,7 @@ function create_PowersenseData(path)
         m.Pmax[i] = st * gen["pmax"];
         m.Qmin[i] = st * gen["qmin"]; 
         m.Qmax[i] = st * gen["qmax"]; 
-
+        
         if network["source_type"] == "matpower"
         	gen = merge(gen, Dict("LinCost"=>Dict()))
         	if length(network["gen"][string(i)]["cost"]) == 3

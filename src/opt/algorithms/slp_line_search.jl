@@ -7,6 +7,7 @@ mutable struct SlpLS{T,Tv,Tt} <: AbstractSlpOptimizer
     x::Tv # primal solution
     p::Tv # search direction
     p_slack::Dict{Int,Tv} # search direction at feasibility restoration phase
+    slack_sum::T # ∑p_slack
     lambda::Tv # Lagrangian dual multiplier
     mult_x_L::Tv # reduced cost for lower bound
     mult_x_U::Tv # reduced cost for upper bound
@@ -42,6 +43,7 @@ mutable struct SlpLS{T,Tv,Tt} <: AbstractSlpOptimizer
         slp.x = Tv(undef, problem.n)
         slp.p = zeros(problem.n)
         slp.p_slack = Dict()
+        slp.slack_sum = 0.0
         slp.lambda = zeros(problem.m)
         slp.mult_x_L = zeros(problem.n)
         slp.mult_x_U = zeros(problem.n)
@@ -82,7 +84,7 @@ function run!(slp::SlpLS)
     if slp.options.OutputFlag == 1
         sparsity_val = ifelse(
             slp.problem.m > 0,
-            length(slp.problem.j_str) / (slp.problem.m * slp.problem.n),
+            1 - length(slp.problem.j_str) / (slp.problem.m * slp.problem.n),
             0.0,
         )
         @printf("LP subproblem sparsity: %e\n", sparsity_val)
@@ -124,6 +126,15 @@ function run!(slp::SlpLS)
     is_valid_step = true
     while true
 
+        if slp.options.OutputFlag == 1 && slp.iter == 5
+            sparsity_val = ifelse(
+                slp.problem.m > 0,
+                1 - length(slp.problem.j_str) / (slp.problem.m * slp.problem.n),
+                0.0,
+            )
+            @printf("LP subproblem sparsity: %e\n", sparsity_val)
+        end
+
         slp.start_iter_time = time()
 
         # evaluate function, constraints, gradient, Jacobian
@@ -138,9 +149,11 @@ function run!(slp::SlpLS)
         slp.p, slp.lambda, slp.mult_x_U, slp.mult_x_L, slp.p_slack, status =
             sub_optimize!(slp)
 
+        evaluate_total_slack!(slp);
+
         add_statistics(slp.problem, "LP_time", time() - LP_time_start)
 
-        if status ∉ [MOI.OPTIMAL, MOI.INFEASIBLE]
+        if status ∉ [MOI.OPTIMAL, MOI.INFEASIBLE, MOI.ALMOST_OPTIMAL, MOI.LOCALLY_SOLVED]
             @warn("Unexpected LP subproblem solution status ($status)")
             slp.ret == -3
             if slp.prim_infeas <= slp.options.tol_infeas
@@ -173,6 +186,10 @@ function run!(slp::SlpLS)
         print_header(slp)
         print(slp)
         collect_statistics(slp)
+
+        if slp.slack_sum <= slp.options.tol_infeas
+            slp.feasibility_restoration = false
+        end
 
         # Iteration counter limit
         if slp.iter >= slp.options.max_iter
@@ -227,6 +244,7 @@ function run!(slp::SlpLS)
     slp.problem.mult_g .= slp.lambda
     slp.problem.mult_x_U .= slp.mult_x_U
     slp.problem.mult_x_L .= slp.mult_x_L
+    slp.problem.iter = slp.iter
     add_statistic(slp.problem, "iter", slp.iter)
 end
 
@@ -347,7 +365,7 @@ function collect_statistics(slp::SlpLS)
     end
     mode = (slp.feasibility_restoration) ? "FR" : "OPT"
     add_statistics(slp.problem, "f(x)", slp.f)
-    add_statistics(slp.problem, "ϕ(x_k))", slp.phi)
+    add_statistics(slp.problem, "ϕ(x_k)", slp.phi)
     add_statistics(slp.problem, "D(ϕ,p)", slp.directional_derivative)
     add_statistics(slp.problem, "|p|", norm(slp.p, Inf))
     add_statistics(slp.problem, "|J|2", norm(slp.dE, 2))

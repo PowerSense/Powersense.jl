@@ -24,17 +24,17 @@ end
 ---------------------------------------------------"
 function add_buses(net_bus, RawString, start, size)
     bus_index=Dict{String,Any}();
-    for i=1:size
+    for I=1:size
+        bus=split(RawString[I+start-1], ",");
+        i=parse(Int64, split(bus[1]," "; limit=0, keepempty=false)[1]);
         net_bus=merge(net_bus, Dict(string(i)=>Dict{String,Any}()));
-        bus=split(RawString[i+start-1], ",");
-        I=parse(Int64, split(bus[1]," "; limit=0, keepempty=false)[1]);
         VM=parse(Float64, split(bus[8]," "; limit=0, keepempty=false)[1]);
         VA=parse(Float64, split(bus[9]," "; limit=0, keepempty=false)[1]);
         NVHI=parse(Float64, split(bus[10]," "; limit=0, keepempty=false)[1]);
         NVLO=parse(Float64, split(bus[11]," "; limit=0, keepempty=false)[1]);
         EVHI=parse(Float64, split(bus[12]," "; limit=0, keepempty=false)[1]);
         EVLO=parse(Float64, split(bus[13]," "; limit=0, keepempty=false)[1]);
-        bus_index=merge(bus_index, Dict(string(I)=>i));
+        bus_index=merge(bus_index, Dict(string(i)=>I));
         net_bus[string(i)]=merge(net_bus[string(i)], Dict("index"=>I));
         net_bus[string(i)]=merge(net_bus[string(i)], Dict("gen"=>false));
         net_bus[string(i)]=merge(net_bus[string(i)], Dict("vm"=>VM));
@@ -59,8 +59,8 @@ end
 function add_loads(net_bus, bus_index, BaseMVA, RawString, start, size)
     for i=1:size
         load=split(RawString[i+start-1], ",");
-        I_index=parse(Int64, split(load[1]," "; limit=0, keepempty=false)[1]);
-        I=bus_index[string(I_index)];
+        I=parse(Int64, split(load[1]," "; limit=0, keepempty=false)[1]);
+        # I=bus_index[string(I_index)];
         ST=parse(Int64, split(load[3]," "; limit=0, keepempty=false)[1]);
         PL=ST*parse(Float64, split(load[6]," "; limit=0, keepempty=false)[1])/BaseMVA+net_bus[string(I)]["Pd"];
         QL=ST*parse(Float64, split(load[7]," "; limit=0, keepempty=false)[1])/BaseMVA+net_bus[string(I)]["Qd"];
@@ -88,8 +88,8 @@ function add_gens(net_bus, net_gen, bus_index, BaseMVA, RawString, start, size)
     for i=1:size
         net_gen=merge(net_gen, Dict(string(i)=>Dict{String,Any}()));
         gen=split(RawString[i+start-1], ",");
-        I_index=parse(Int64, split(gen[1]," "; limit=0, keepempty=false)[1]);
-        I=bus_index[string(I_index)];
+        I=parse(Int64, split(gen[1]," "; limit=0, keepempty=false)[1]);
+        I_index=bus_index[string(I)];
         ID=split(gen[2],r"\W"; limit=0, keepempty=false);
         if (length(ID)>0) ID=split(ID[1]," "; limit=0, keepempty=false)[1]; end
         St=parse(Int64, split(gen[15]," "; limit=0, keepempty=false)[1]);
@@ -100,8 +100,8 @@ function add_gens(net_bus, net_gen, bus_index, BaseMVA, RawString, start, size)
         PT=parse(Float64, split(gen[17]," "; limit=0, keepempty=false)[1])/BaseMVA;
         PB=parse(Float64, split(gen[18]," "; limit=0, keepempty=false)[1])/BaseMVA;
 
-        net_gen[string(i)]=merge(net_gen[string(i)], Dict("gen_bus_index"=>I));
-        net_gen[string(i)]=merge(net_gen[string(i)], Dict("gen_bus"=>I_index));
+        net_gen[string(i)]=merge(net_gen[string(i)], Dict("gen_bus_index"=>I_index));
+        net_gen[string(i)]=merge(net_gen[string(i)], Dict("gen_bus"=>I));
         net_gen[string(i)]=merge(net_gen[string(i)], Dict("id"=>ID));
         net_gen[string(i)]=merge(net_gen[string(i)], Dict("gen_status"=>St));
         net_gen[string(i)]=merge(net_gen[string(i)], Dict("pg"=>PG));
@@ -117,8 +117,8 @@ function add_gens(net_bus, net_gen, bus_index, BaseMVA, RawString, start, size)
         if (St==1) net_bus[string(I)]["bus_type"]=2; net_bus[string(I)]["gen"]=true; append!(gen_buses,I); end
         if (St*PT>net_gen[string(temp_pamx_id)]["pmax"]) temp_pamx_id=i; end
     end
-    net_bus[string(net_gen[string(temp_pamx_id)]["gen_bus_index"])]["bus_type"]=3;
-    return(net_bus, net_gen, net_gen[string(temp_pamx_id)]["gen_bus_index"], gen_buses);
+    net_bus[string(net_gen[string(temp_pamx_id)]["gen_bus"])]["bus_type"]=3;
+    return(net_bus, net_gen, net_gen[string(temp_pamx_id)]["gen_bus"], gen_buses);
 end
 
 function add_Lbranches(net_br, bus_index, BaseMVA, RawString, start, size)
@@ -176,10 +176,10 @@ function add_Tbranches(net_bus, net_br, bus_index, BaseMVA, RawString, pre, star
         St=parse(Int64, split(Tran1[12]," "; limit=0, keepempty=false)[1]);
         if (St==1)  ind+=1;
             net_br=merge(net_br, Dict(string(ind+pre)=>Dict{String,Any}()));
-            I_index=parse(Int64, split(Tran1[1]," "; limit=0, keepempty=false)[1]);
-            I=bus_index[string(I_index)];
-            J_index=parse(Int64, split(Tran1[2]," "; limit=0, keepempty=false)[1]);
-            J=bus_index[string(J_index)];
+            I=parse(Int64, split(Tran1[1]," "; limit=0, keepempty=false)[1]);
+            I_index=bus_index[string(I)];
+            J=parse(Int64, split(Tran1[2]," "; limit=0, keepempty=false)[1]);
+            J_index=bus_index[string(J)];
             CKT=split(Tran1[4],r"\W"; limit=0, keepempty=false);
             if (length(CKT)>0) CKT=split(CKT[1]," "; limit=0, keepempty=false)[1]; end
             MAG1=parse(Float64, split(Tran1[8]," "; limit=0, keepempty=false)[1]);
@@ -201,10 +201,10 @@ function add_Tbranches(net_bus, net_br, bus_index, BaseMVA, RawString, pre, star
             net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("b_to"=>0.0));
             net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("rate_a"=>RATEA1));
             net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("rate_c"=>RATEC1));
-            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("f_bus"=>I_index));
-            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("t_bus"=>J_index));
-            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("f_bus_index"=>I));
-            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("t_bus_index"=>J));
+            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("f_bus"=>I));
+            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("t_bus"=>J));
+            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("f_bus_index"=>I_index));
+            net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("t_bus_index"=>J_index));
             net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("transformer"=>true));
             net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("tap"=>WINDV1/WINDV2));
             net_br[string(ind+pre)]=merge(net_br[string(ind+pre)], Dict("shift"=>ANG1*pi/180));
@@ -228,8 +228,8 @@ function add_switch_shunts(net_bus, net_sshunt, bus_index, BaseMVA, RawString, s
     for i=1:size
         net_sshunt=merge(net_sshunt, Dict(string(i)=>Dict{String,Any}()));
         shunt=split(RawString[i+start-1], ",");
-        I_index=parse(Int64, split(shunt[1]," "; limit=0, keepempty=false)[1]);
-        I=bus_index[string(I_index)];
+        I=parse(Int64, split(shunt[1]," "; limit=0, keepempty=false)[1]);
+        I_index=bus_index[string(I)];
         STATUS=parse(Int64, split(shunt[4]," "; limit=0, keepempty=false)[1]);
 
         N=zeros(8); B=zeros(8); BL=zeros(8); Shmin=0; Shmax=0;
@@ -239,7 +239,7 @@ function add_switch_shunts(net_bus, net_sshunt, bus_index, BaseMVA, RawString, s
             BL[i]=N[i]*B[i]/BaseMVA; if (BL[i]>0) Shmax+=BL[i]*STATUS; elseif (BL[i]<0) Shmin+=BL[i]*STATUS; end
         end
 
-        net_sshunt[string(i)]=merge(net_sshunt[string(i)], Dict("status"=>STATUS), Dict("shunt_bus"=>I_index), Dict("shunt_bus_index"=>I));
+        net_sshunt[string(i)]=merge(net_sshunt[string(i)], Dict("status"=>STATUS), Dict("shunt_bus"=>I), Dict("shunt_bus_index"=>I_index));
         net_sshunt[string(i)]=merge(net_sshunt[string(i)], Dict("shmax"=>Shmax), Dict("shmin"=>Shmin));
 
         Shmax+=net_bus[string(I)]["sh_max"]*STATUS;

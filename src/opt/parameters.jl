@@ -19,14 +19,14 @@ Base.@kwdef mutable struct Parameters
     tol_residual::Float64 = 0.01    # tolerance for Kuhn-Tucker residual
     tol_infeas::Float64 = 0.01      # tolerance for constraint violation
     tol_error::Float64 = 0          # tolerance for error
-    max_iter::Int = 1000            # Defines the maximum number of iterations
+    max_iter::Int = 10000           # Defines the maximum number of iterations
     time_limit::Float64 = Inf       # Defines the time limit for the solver. (This hasn't been implemented yet)
     mu_merit::Float64 = Inf         # penalty parameter used in merit function
     max_mu::Float64 = 1.e+6         # maximum mu value allowed
     rho::Float64 = 0.8              # directional derivative parameter defined in (0,1)
     eta::Float64 = 0.4              # descent step test parameter defined in (0,0.5)
     tau::Float64 = 0.9              # line search step decrease parameter defined in (0,1)
-    min_alpha::Float64 = 1.e-6      # minimum step size
+    min_alpha::Float64 = 1.e-8      # minimum step size
     tr_size::Float64 = 0.4          # trust region size
 end
 

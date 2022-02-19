@@ -4,7 +4,7 @@ optimizer_solver = optimizer_with_attributes(Powersense.Optimizer,"external_opti
 
 M = create_PowersenseData(path)
 
-run_opf!(M, solver = optimizer_solver, obj_type = "linear", formulation = PNPAPVmodel);
+run_opf!(M, solver = optimizer_solver, obj_type = :linear, formulation = PNPAPVmodel);
 
 @test isapprox(M.cost, 1.467e+02, rtol=1e-1)
 

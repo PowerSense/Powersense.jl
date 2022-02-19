@@ -140,7 +140,7 @@ function run!(slp::SlpLS)
         # evaluate function, constraints, gradient, Jacobian
         eval_functions!(slp)
         slp.alpha = 0.0
-        slp.prim_infeas = norm_violations(slp, 1)
+        slp.prim_infeas = norm_violations(slp, Inf)
         slp.dual_infeas = KT_residuals(slp)
         slp.compl = norm_complementarity(slp)
 

@@ -378,8 +378,6 @@ function create_opf_model!(data::PowersenseData;
                 JuMP.@NLconstraint(data.model, Pji[k]^2 + Qji[k]^2 <= data.Imax[k]^2 * (vr[t]^2+vi[t]^2));
             elseif formulation == PBRAWVmodel
                 JuMP.@NLconstraint(data.model, Wr[k] * Wr[k]  + Wi[k] * Wi[k] == Wd[f] * Wd[t]);
-                # JuMP.@NLconstraint(data.model, Wr[k] == vr[f] * vr[t] + vi[f] * vi[t]);   
-                # JuMP.@NLconstraint(data.model, Wi[k] == vr[f] * vi[t] - vi[f] * vr[t]);
                 JuMP.@constraint(data.model, Pij[k] == - data.gf[k] * Wd[f] - data.Gf[k] * Wr[k] + data.Bf[k] * Wi[k]);
                 JuMP.@constraint(data.model, Pji[k] == - data.gt[k] * Wd[t] - data.Gt[k] * Wr[k] - data.Bt[k] * Wi[k]);
                 JuMP.@constraint(data.model, Qij[k] == + data.bf[k] * Wd[f] + data.Bf[k] * Wr[k] + data.Gf[k] * Wi[k]); 

@@ -9,7 +9,7 @@ MOI.set(optimizer, MOI.RawParameter("external_optimizer"), GLPK.Optimizer)
 MOI.set(optimizer, MOI.RawParameter("max_iter"), 3000)
 MOI.set(optimizer, MOI.RawParameter("tol_residual"), 1.e-2)
 MOI.set(optimizer, MOI.RawParameter("tol_infeas"), 1.e-2)
-MOI.set(optimizer, MOI.RawParameter("OutputFlag"), 1)
+MOI.set(optimizer, MOI.RawParameter("OutputFlag"), 0)
 
 const config_no_duals = MOIT.TestConfig(atol=1e-2, rtol=1e-2, duals=false, optimal_status=MOI.LOCALLY_SOLVED)
 
@@ -22,7 +22,8 @@ end
     @test !MOIU.supports_default_copy_to(optimizer, true)
 end
 
-@testset "Unit ($algo)" for algo in ["Line Search", "Trust Region"]
+#@testset "Unit ($algo)" for algo in ["Line Search", "Trust Region"]
+@testset "Unit ($algo)" for algo in ["Line Search"]
 # @testset "Unit ($algo)" for algo in ["Line Search"]
     MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
     bridged = MOIB.full_bridge_optimizer(optimizer, Float64)
@@ -69,7 +70,8 @@ end
     MOI.empty!(optimizer)
 end
 
-@testset "MOI Linear tests ($algo)" for algo in ["Line Search", "Trust Region"]
+#@testset "MOI Linear tests ($algo)" for algo in ["Line Search", "Trust Region"]
+@testset "MOI Linear tests ($algo)" for algo in ["Line Search"]
     MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
     exclude = ["linear8a", # Behavior in infeasible case doesn't match test.
                "linear12", # Same as above.
@@ -95,7 +97,8 @@ end
     MOI.empty!(optimizer)
 end
 
-@testset "MOI QCQP tests ($algo)" for algo in ["Line Search", "Trust Region"]
+#@testset "MOI QCQP tests ($algo)" for algo in ["Line Search", "Trust Region"]
+@testset "MOI QCQP tests ($algo)" for algo in ["Line Search"]
     MOI.set(optimizer, MOI.RawParameter("algorithm"), algo)
     qp_optimizer = MOIU.CachingOptimizer(MOIU.Model{Float64}(), optimizer)
     exclude = ["qcp1"] # VectorAffineFunction not supported.

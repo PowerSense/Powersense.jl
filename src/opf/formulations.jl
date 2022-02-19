@@ -462,10 +462,10 @@ function create_opf_model!(data::PowersenseData;
                     JuMP.@constraint(data.model, - data.Imax[k] * data.Vmax[t] <= Qji[k] <= data.Imax[k] * data.Vmax[t]);
                 end
             elseif formulation ∈ [CBRARVmodel, CBRAWVmodel]
-                JuMP.@constraint(data.model, - data.Imax[k] .<= Irij[k] .<= data.Imax[k]);
-                JuMP.@constraint(data.model, - data.Imax[k] .<= Iiij[k] .<= data.Imax[k]);
-                JuMP.@constraint(data.model, - data.Imax[k] .<= Irji[k] .<= data.Imax[k]);
-                JuMP.@constraint(data.model, - data.Imax[k] .<= Iiji[k] .<= data.Imax[k]);
+                JuMP.@constraint(data.model, - data.Imax .<= Irij .<= data.Imax);
+                JuMP.@constraint(data.model, - data.Imax .<= Iiij .<= data.Imax);
+                JuMP.@constraint(data.model, - data.Imax .<= Irji .<= data.Imax);
+                JuMP.@constraint(data.model, - data.Imax .<= Iiji .<= data.Imax);
             end
         end
     end
